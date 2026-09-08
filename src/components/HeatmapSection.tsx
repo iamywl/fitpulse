@@ -3,11 +3,14 @@ import { WorkoutSession } from '../models/fitness';
 import { VolumeService } from '../services/calculator/VolumeService';
 import { Calendar, Info, Sparkles, CheckCircle2 } from 'lucide-react';
 
+import { ThemeMode } from '../theme/pantone';
+
 interface HeatmapSectionProps {
   workouts: WorkoutSession[];
   onSelectWorkout?: (workout: WorkoutSession) => void;
   onQuickLogToday?: () => void;
   isMobileView?: boolean;
+  themeMode?: ThemeMode;
 }
 
 export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
@@ -15,7 +18,9 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
   onSelectWorkout,
   onQuickLogToday,
   isMobileView = false,
+  themeMode = 'dark',
 }) => {
+  const isLight = themeMode === 'light';
   const [hoveredDay, setHoveredDay] = useState<{
     date: string;
     workout?: WorkoutSession;
@@ -83,18 +88,33 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
   }, [workouts]);
 
   const getCellColorClass = (level: number, isToday: boolean) => {
-    const baseToday = isToday ? 'ring-1.5 ring-[#FFB703] animate-pulse' : '';
-    switch (level) {
-      case 1:
-        return `bg-[#182608] border-[#29420D] hover:ring-2 hover:ring-[#84CC16] ${baseToday}`;
-      case 2:
-        return `bg-[#4D7C0F] border-[#65A30D] hover:ring-2 hover:ring-[#A3E635] ${baseToday}`;
-      case 3:
-        return `bg-[#A3E635] border-[#BEF264] hover:ring-2 hover:ring-[#D4FF00] ${baseToday}`;
-      case 4:
-        return `bg-[#D4FF00] border-white shadow-[0_0_8px_rgba(212,255,0,0.85)] hover:ring-2 hover:ring-white ${baseToday}`;
-      default:
-        return `bg-[#0A0A0E] border-[#23232D] hover:border-slate-600 ${baseToday}`;
+    const baseToday = isToday ? 'ring-2 ring-[#F59E0B] z-10' : '';
+    if (isLight) {
+      switch (level) {
+        case 1:
+          return `bg-[#9BE9A8] border-[#86EFAC] hover:ring-2 hover:ring-emerald-500 ${baseToday}`;
+        case 2:
+          return `bg-[#40C463] border-[#22C55E] hover:ring-2 hover:ring-green-600 ${baseToday}`;
+        case 3:
+          return `bg-[#30A14E] border-[#16A34A] hover:ring-2 hover:ring-green-700 ${baseToday}`;
+        case 4:
+          return `bg-[#216E39] border-[#14532D] shadow-sm hover:ring-2 hover:ring-green-900 ${baseToday}`;
+        default:
+          return `bg-[#EBEDF0] border-[#E2E8F0] hover:border-slate-400 ${baseToday}`;
+      }
+    } else {
+      switch (level) {
+        case 1:
+          return `bg-[#182608] border-[#29420D] hover:ring-2 hover:ring-[#84CC16] ${baseToday}`;
+        case 2:
+          return `bg-[#4D7C0F] border-[#65A30D] hover:ring-2 hover:ring-[#A3E635] ${baseToday}`;
+        case 3:
+          return `bg-[#A3E635] border-[#BEF264] hover:ring-2 hover:ring-[#D4FF00] ${baseToday}`;
+        case 4:
+          return `bg-[#D4FF00] border-white shadow-[0_0_8px_rgba(212,255,0,0.85)] hover:ring-2 hover:ring-white ${baseToday}`;
+        default:
+          return `bg-[#0A0A0E] border-[#23232D] hover:border-slate-600 ${baseToday}`;
+      }
     }
   };
 
@@ -103,17 +123,23 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
   }, [workouts, todayStr]);
 
   return (
-    <div className="bg-[#121217] border border-[#23232D] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden">
+    <div
+      className={`border rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden transition-colors ${
+        isLight
+          ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100'
+          : 'bg-[#121217] border-[#272732] text-white shadow-2xl'
+      }`}
+    >
       {/* Header & Quick Insights */}
       <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'flex-col md:flex-row md:items-center md:justify-between'} gap-3 mb-4`}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Calendar className="w-5 h-5 text-[#D4FF00]" />
-            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+            <Calendar className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
+            <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
               운동 활동 히트맵 (잔디 심기)
             </h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
             꾸준한 출석과 운동 볼륨 강도에 따라 잔디의 색상이 짙어집니다.
           </p>
         </div>
@@ -131,28 +157,38 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
           )}
 
           {hasTodayWorkout && (
-            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#D4FF00]/15 border border-[#D4FF00]/30 text-[#D4FF00] text-xs font-black">
+            <div
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-black border ${
+                isLight
+                  ? 'bg-lime-50 text-lime-800 border-lime-300'
+                  : 'bg-[#D4FF00]/15 border-[#D4FF00]/30 text-[#D4FF00]'
+              }`}
+            >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>오늘 잔디 완료!</span>
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-2 bg-[#0A0A0E] p-1.5 sm:p-2 rounded-2xl border border-[#23232D]">
+          <div
+            className={`grid grid-cols-3 gap-2 p-1.5 sm:p-2 rounded-2xl border transition-colors ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'
+            }`}
+          >
             <div className="text-center px-1">
-              <div className="text-[10px] font-bold text-slate-400">운동일수</div>
-              <div className="text-xs sm:text-sm font-black text-white font-mono-num">
+              <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>운동일수</div>
+              <div className={`text-xs sm:text-sm font-black font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {stats.totalWorkouts}회
               </div>
             </div>
-            <div className="text-center px-1 border-x border-[#23232D]">
-              <div className="text-[10px] font-bold text-slate-400">누적 볼륨</div>
-              <div className="text-xs sm:text-sm font-black text-[#D4FF00] font-mono-num">
+            <div className={`text-center px-1 border-x ${isLight ? 'border-slate-200' : 'border-[#23232D]'}`}>
+              <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>누적 볼륨</div>
+              <div className={`text-xs sm:text-sm font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
                 {(stats.totalVolume / 1000).toFixed(1)}t
               </div>
             </div>
             <div className="text-center px-1">
-              <div className="text-[10px] font-bold text-slate-400">평균 볼륨</div>
-              <div className="text-xs sm:text-sm font-black text-[#38BDF8] font-mono-num">
+              <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>평균 볼륨</div>
+              <div className={`text-xs sm:text-sm font-black font-mono-num ${isLight ? 'text-sky-700' : 'text-[#38BDF8]'}`}>
                 {VolumeService.formatKg(stats.avgVolume)}
               </div>
             </div>
@@ -162,9 +198,9 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
 
       {/* GitHub Style Heatmap Grid */}
       <div className="relative">
-        <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-700">
+        <div className={`overflow-x-auto pb-2 scrollbar-thin ${isLight ? 'scrollbar-thumb-slate-300' : 'scrollbar-thumb-slate-700'}`}>
           <div className="min-w-[560px] flex gap-1 items-start">
-            <div className="flex flex-col gap-1 text-[9px] text-slate-400 font-bold pr-1 pt-0.5 select-none">
+            <div className={`flex flex-col gap-1 text-[9px] font-bold pr-1 pt-0.5 select-none ${isLight ? 'text-slate-400' : 'text-slate-400'}`}>
               <div className="h-3 leading-none">일</div>
               <div className="h-3 leading-none">월</div>
               <div className="h-3 leading-none">화</div>
@@ -206,54 +242,73 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
       </div>
 
       {/* Heatmap Legend */}
-      <div className="mt-2.5 pt-2.5 border-t border-[#23232D] flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-          <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+      <div className={`mt-2.5 pt-2.5 border-t flex flex-wrap items-center justify-between text-xs gap-2 ${
+        isLight ? 'border-slate-200 text-slate-500' : 'border-[#23232D] text-slate-400'
+      }`}>
+        <div className="flex items-center gap-1.5 text-[11px]">
+          <Info className="w-3.5 h-3.5 flex-shrink-0" />
           <span>셀 클릭 시 운동 세부 내역 확인</span>
         </div>
 
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-slate-400 font-semibold">Less</span>
+          <span className="font-semibold">Less</span>
           <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#0A0A0E] border border-[#23232D]" title="0 kg (휴식)" />
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#182608] border border-[#29420D]" title="< 5,000 kg (가벼운 운동)" />
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#4D7C0F] border border-[#65A30D]" title="5,000 ~ 12,000 kg (적정 강도)" />
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#A3E635] border border-[#BEF264]" title="12,000 ~ 20,000 kg (고강도)" />
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#D4FF00] border-white shadow-[0_0_6px_rgba(212,255,0,0.85)]" title="> 20,000 kg (극한 볼륨)" />
+            {isLight ? (
+              <>
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#EBEDF0] border border-[#E2E8F0]" title="0 kg (휴식)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#9BE9A8] border border-[#86EFAC]" title="< 5,000 kg (가벼운 운동)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#40C463] border border-[#22C55E]" title="5,000 ~ 12,000 kg (적정 강도)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#30A14E] border border-[#16A34A]" title="12,000 ~ 20,000 kg (고강도)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#216E39] border border-[#14532D]" title="> 20,000 kg (극한 볼륨)" />
+              </>
+            ) : (
+              <>
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#0A0A0E] border border-[#23232D]" title="0 kg (휴식)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#182608] border border-[#29420D]" title="< 5,000 kg (가벼운 운동)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#4D7C0F] border border-[#65A30D]" title="5,000 ~ 12,000 kg (적정 강도)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#A3E635] border border-[#BEF264]" title="12,000 ~ 20,000 kg (고강도)" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#D4FF00] border-white shadow-[0_0_6px_rgba(212,255,0,0.85)]" title="> 20,000 kg (극한 볼륨)" />
+              </>
+            )}
           </div>
-          <span className="text-slate-400 font-semibold">More</span>
+          <span className="font-semibold">More</span>
         </div>
       </div>
 
       {/* Floating Tooltip */}
       {hoveredDay && (
         <div
-          className="fixed z-50 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-2 bg-[#0A0A0E] border border-[#23232D] text-white text-xs px-3 py-2 rounded-xl shadow-2xl backdrop-blur-md transition-all duration-75"
+          className={`fixed z-50 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-2 text-xs px-3 py-2 rounded-xl shadow-xl backdrop-blur-md transition-all duration-75 border ${
+            isLight
+              ? 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-200'
+              : 'bg-[#0A0A0E]/95 border-[#23232D] text-white shadow-2xl'
+          }`}
           style={{
             left: `${hoveredDay.x}px`,
             top: `${hoveredDay.y - 8}px`,
           }}
         >
-          <div className="font-bold text-white mb-0.5 flex items-center gap-1.5">
-            <span>{hoveredDay.date}</span>
+          <div className="font-bold mb-0.5 flex items-center gap-1.5">
+            <span className={isLight ? 'text-slate-900' : 'text-white'}>{hoveredDay.date}</span>
             {hoveredDay.date === todayStr && (
               <span className="text-[9px] bg-[#D4FF00] text-black font-black px-1.5 py-0.2 rounded">오늘</span>
             )}
           </div>
           {hoveredDay.workout ? (
             <div>
-              <div className="text-[#D4FF00] font-black font-mono-num">
+              <div className={`font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
                 {VolumeService.formatKg(hoveredDay.workout.totalVolume)}
               </div>
-              <div className="text-slate-300 text-[11px] mt-0.5">
+              <div className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
                 {hoveredDay.workout.title} ({hoveredDay.workout.exercises.length}개 종목)
               </div>
             </div>
           ) : (
-            <div className="text-slate-500 text-[11px]">기록된 운동 없음 (휴식일)</div>
+            <div className={`text-[11px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>기록된 운동 없음 (휴식일)</div>
           )}
         </div>
       )}
     </div>
   );
 };
+

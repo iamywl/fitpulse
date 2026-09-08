@@ -20,6 +20,7 @@
 
 본 프로젝트는 어두운 헬스장 환경(Gym Floor Low-Light) 및 OLED 디스플레이에서 압도적인 식별력을 발휘하도록 **WCAG 2.1 AAA (대비율 7:1 ~ 18:1)** 등급을 철저히 준수합니다.
 
+### 2.1 다크 테마: 옵시디언 카본 (Obsidian Carbon OLED)
 | 색상 명칭 | 팬톤 코드 및 HEX | 명도 대비율 | 디자인 의도 및 적용처 |
 | :--- | :--- | :---: | :--- |
 | **Primary Hero** | **Pantone 2288 C** (Nike Volt)<br>`#CCFF00` / `#D4FF00` | **15.6:1 ~ 18.2:1** | 어두운 카본 배경 위에서 최고의 망막 식별력. Today 강조 뱃지, 주 액션 CTA(검정 볼드 텍스트 결합), 히트맵 4단계, 진행률 인디케이터. |
@@ -31,6 +32,28 @@
 | **Surface Hover** | Obsidian True Carbon 800<br>`#18181F` / `#1F1F2A` | Surface L2 | 호버 및 활성화된 리스트 아이템, 모달 내부 섹션. |
 | **Border Crisp** | Obsidian Carbon Hairline<br>`#23232D` / `#272732` | **4.8:1** | 0.5px~1px 초슬림 헤어라인 경계선 (빛 번짐 없는 정밀 카드 분할). |
 | **Typography** | Pure White / Cool Grey<br>`#FFFFFF` / `#94A3B8` | **18.2:1 / 6.8:1** | 수치 및 종목 헤드라인(Pure White), 세트 가이드 설명(Cool Grey). |
+
+### 2.2 라이트 테마: 스포츠 클린 화이트 (Sport Crisp Clean White)
+야외 직사광선 및 밝은 실내 환경에서 눈부심 없이 선명한 인식을 보장하는 팬톤 기반 주광색 테마:
+| 색상 명칭 | 팬톤/HEX | 명도 대비율 | 디자인 의도 및 적용처 |
+| :--- | :--- | :---: | :--- |
+| **Primary Hero (Plate)** | **Pantone 2288 C** (Nike Volt)<br>`#D4FF00` | **15.6:1** (w/ `#09090B`) | 흰 배경 위에서는 Volt 단독 텍스트 사용 금지(1.25:1 대비). **Volt 배경 뱃지 + Black 볼드 텍스트** 조합 또는 **Deep Volt Lime(`#3F6212` / `#4D7C0F`, 7.4:1)**으로 렌더링. |
+| **Secondary Accent**| **Pantone 2995 C** (Cobalt/Cyan)<br>`#0284C7` / `#0369A1` | **7.1:1** | 라이트 배경에 맞춰 명도를 낮춘 고대비 테크니컬 블루. |
+| **Danger / Deload** | Vivid Crimson<br>`#DC2626` / `#B91C1C` | **6.1:1** | 디로드/과부하 감소 및 삭제 액션. |
+| **Surface Base** | Pure Crisp Studio White<br>`#F8FAFC` / `#FFFFFF` | Base Void | 밝고 깨끗한 운동 스튜디오 배경. |
+| **Surface Card** | Clean Slate Card<br>`#FFFFFF` / `#F1F5F9` | Surface L1 | 입체감과 깊이감을 살린 카드 표면. |
+| **Border Crisp** | Slate Border Hairline<br>`#E2E8F0` / `#CBD5E1` | **3.8:1** | 세련되고 정밀한 경계선 분할. |
+| **Typography** | Slate 900 / Slate 500<br>`#0F172A` / `#64748B` | **16.1:1 / 6.5:1** | 완벽한 WCAG AAA 가독성의 헤드라인 및 수치 표기. |
+
+### 2.3 UI 요소 및 글자 비율 (Proportion & Hierarchy Rules)
+1. **황금 비율 수치-단위 시각적 기준선 (Baseline Alignment)**:
+   - 숫자(`JetBrains Mono`, 볼드)와 단위(`kg`, `회`, `일` 등)는 반드시 `flex items-baseline`으로 정렬.
+   - 단위 텍스트는 수치 크기의 약 50~60% 크기(`text-xs`~`text-sm font-semibold`)를 유지하여 숫자의 시인성을 극대화.
+2. **원터치 퀵 칩 & 스테퍼 조작성 (44px/36px 터치 면적)**:
+   - `-2.5`, `+2.5`, `+5` 퀵 중량 칩은 최소 `min-h-[32px]~[36px]` 높이와 여유로운 패딩을 확보하여 조작 미스를 방지.
+   - 세트 입력 12열 그리드는 **5(중량) : 4(반복수) : 3(완료 버튼)** 비율로 배분하여 390px 화면에서도 여유로운 터치 공간 제공.
+3. **TODAY 뱃지 클리핑 방지**:
+   - 7-Day 스트립 바는 상단 여백(`pt-3`)을 두어 오늘 뱃지가 카드 상단 경계선에 잘리지 않도록 안전 영역 확보.
 
 ---
 

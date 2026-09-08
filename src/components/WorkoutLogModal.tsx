@@ -3,11 +3,14 @@ import { IExerciseLog, IExerciseSet, IRecommendedWeight, WorkoutSession } from '
 import { VolumeService } from '../services/calculator/VolumeService';
 import { X, Plus, Trash2, CheckCircle2, Dumbbell, Calendar, Clock, Flame, Check } from 'lucide-react';
 
+import { ThemeMode } from '../theme/pantone';
+
 interface WorkoutLogModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveWorkout: (workout: WorkoutSession) => void;
   initialPreset?: IRecommendedWeight | null;
+  themeMode?: ThemeMode;
 }
 
 const DEFAULT_EXERCISE_OPTIONS = [
@@ -27,7 +30,9 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
   onClose,
   onSaveWorkout,
   initialPreset,
+  themeMode = 'dark',
 }) => {
+  const isLight = themeMode === 'light';
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [date, setDate] = useState<string>(todayStr);
@@ -171,21 +176,25 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
-      <div className="bg-[#121217] border border-[#23232D] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div
+        className={`w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border transition-colors ${
+          isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#121217] border-[#23232D] text-white'
+        }`}
+      >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#23232D] bg-[#0A0A0E]">
+        <div className={`flex items-center justify-between p-4 border-b ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#D4FF00] text-black flex items-center justify-center font-black shadow-md shadow-[#D4FF00]/30">
               <Dumbbell className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-black text-white">운동 일지 상세 작성</h2>
-              <p className="text-xs text-slate-400">종목별 중량(kg)과 반복횟수(reps)를 기입하면 볼륨이 자동 계산됩니다.</p>
+              <h2 className={`text-base font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>운동 일지 상세 작성</h2>
+              <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>종목별 중량(kg)과 반복횟수(reps)를 기입하면 볼륨이 자동 계산됩니다.</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#181820] transition-all"
+            className={`p-1.5 rounded-xl transition-all ${isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-200' : 'text-slate-400 hover:text-white hover:bg-[#181820]'}`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -195,21 +204,25 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-[#D4FF00]" />
+              <label className={`block text-xs font-bold mb-1 flex items-center gap-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                <Calendar className={`w-3.5 h-3.5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
                 운동 날짜
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-[#0A0A0E] border border-[#23232D] rounded-xl px-3 py-2 text-xs font-black text-white outline-none focus:border-[#D4FF00]"
+                className={`w-full rounded-xl px-3 py-2 text-xs font-black outline-none border transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
+                    : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                }`}
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
-                <Flame className="w-3.5 h-3.5 text-[#FFB703]" />
+              <label className={`block text-xs font-bold mb-1 flex items-center gap-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                <Flame className="w-3.5 h-3.5 text-amber-500" />
                 루틴 제목
               </label>
               <input
@@ -217,37 +230,51 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="예: 가슴 & 삼두 파워 데이"
-                className="w-full bg-[#0A0A0E] border border-[#23232D] rounded-xl px-3 py-2 text-xs font-black text-white outline-none focus:border-[#D4FF00]"
+                className={`w-full rounded-xl px-3 py-2 text-xs font-black outline-none border transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
+                    : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                }`}
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-[#38BDF8]" />
+              <label className={`block text-xs font-bold mb-1 flex items-center gap-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                <Clock className={`w-3.5 h-3.5 ${isLight ? 'text-sky-600' : 'text-[#38BDF8]'}`} />
                 운동 시간 (분)
               </label>
               <input
                 type="number"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
-                className="w-full bg-[#0A0A0E] border border-[#23232D] rounded-xl px-3 py-2 text-xs font-black text-white font-mono-num outline-none focus:border-[#D4FF00]"
+                className={`w-full rounded-xl px-3 py-2 text-xs font-black font-mono-num outline-none border transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
+                    : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                }`}
               />
             </div>
           </div>
 
           {/* Realtime Volume Preview Banner */}
-          <div className="bg-[#0A0A0E] border border-[#D4FF00]/40 rounded-2xl p-3.5 flex items-center justify-between shadow-inner">
+          <div
+            className={`border rounded-2xl p-3.5 flex items-center justify-between shadow-inner transition-colors ${
+              isLight
+                ? 'bg-lime-50/70 border-lime-300'
+                : 'bg-[#0A0A0E] border-[#D4FF00]/40'
+            }`}
+          >
             <div>
-              <span className="text-[10px] uppercase font-black tracking-wider text-[#D4FF00]">
+              <span className={`text-[10px] uppercase font-black tracking-wider ${isLight ? 'text-lime-800' : 'text-[#D4FF00]'}`}>
                 실시간 세션 총 볼륨
               </span>
-              <div className="text-xl sm:text-2xl font-black text-white font-mono-num">
+              <div className={`text-xl sm:text-2xl font-black font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {VolumeService.formatKg(currentTotalVolume)}
               </div>
             </div>
-            <div className="text-right text-xs text-slate-300">
+            <div className={`text-right text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
               총 {exercises.length}개 종목 ·{' '}
-              <strong className="text-[#D4FF00] font-black font-mono-num">
+              <strong className={`font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
                 {exercises.reduce((sum, e) => sum + e.sets.filter(s => s.completed).length, 0)}세트
               </strong>
             </div>
@@ -255,7 +282,7 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
 
           {/* Exercise List */}
           <div className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-300">
+            <h3 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
               수행 종목 및 세트 (중량 x 횟수)
             </h3>
 
@@ -264,27 +291,33 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
               return (
                 <div
                   key={ex.id}
-                  className="bg-[#0A0A0E] border border-[#23232D] rounded-2xl p-3.5 space-y-3"
+                  className={`border rounded-2xl p-3.5 space-y-3 transition-colors ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-lg bg-[#181820] text-[#D4FF00] text-xs flex items-center justify-center font-black">
+                      <span className={`w-5 h-5 rounded-lg text-xs flex items-center justify-center font-black ${
+                        isLight ? 'bg-lime-200 text-lime-900' : 'bg-[#181820] text-[#D4FF00]'
+                      }`}>
                         {exIdx + 1}
                       </span>
-                      <span className="font-extrabold text-sm text-white">{ex.exerciseName}</span>
-                      <span className="text-[10px] text-slate-400 uppercase bg-[#181820] px-2 py-0.5 rounded border border-[#23232D]">
+                      <span className={`font-extrabold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{ex.exerciseName}</span>
+                      <span className={`text-[10px] uppercase px-2 py-0.5 rounded border ${
+                        isLight ? 'bg-white text-slate-600 border-slate-200' : 'bg-[#181820] text-slate-400 border-[#23232D]'
+                      }`}>
                         {ex.category}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-[#D4FF00] font-mono-num">
+                      <span className={`text-xs font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
                         {VolumeService.formatKg(exVol)}
                       </span>
                       {exercises.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveExercise(ex.id)}
-                          className="text-slate-500 hover:text-[#FF3B56] p-1"
+                          className="text-slate-400 hover:text-rose-500 p-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -295,21 +328,30 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                   {/* Set Rows */}
                   <div className="space-y-2">
                     {ex.sets.map(s => (
-                      <div key={s.id} className="bg-[#121217] border border-[#23232D] rounded-xl p-2.5 flex flex-col gap-2">
+                      <div
+                        key={s.id}
+                        className={`border rounded-xl p-2.5 flex flex-col gap-2 transition-colors ${
+                          isLight ? 'bg-white border-slate-200' : 'bg-[#121217] border-[#23232D]'
+                        }`}
+                      >
                         <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-slate-400">Set #{s.setNumber}</span>
+                          <span className={`font-bold ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Set #{s.setNumber}</span>
                           <div className="flex gap-1">
                             <button
                               type="button"
                               onClick={() => handleAdjustWeight(ex.id, s.id, -2.5)}
-                              className="px-1.5 py-0.5 rounded bg-[#181820] text-[10px] text-slate-300 border border-[#23232D]"
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                                isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300' : 'bg-[#181820] text-slate-300 border-[#23232D]'
+                              }`}
                             >
                               -2.5kg
                             </button>
                             <button
                               type="button"
                               onClick={() => handleAdjustWeight(ex.id, s.id, 2.5)}
-                              className="px-1.5 py-0.5 rounded bg-[#181820] text-[10px] text-[#D4FF00] border border-[#23232D]"
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                                isLight ? 'bg-lime-50 hover:bg-lime-100 text-lime-800 border-lime-300' : 'bg-[#181820] text-[#D4FF00] border-[#23232D]'
+                              }`}
                             >
                               +2.5kg
                             </button>
@@ -317,7 +359,7 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveSet(ex.id, s.id)}
-                                className="p-0.5 text-slate-500 hover:text-rose-400 ml-1"
+                                className="p-0.5 text-slate-400 hover:text-rose-500 ml-1"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -335,9 +377,13 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                                 onChange={(e) =>
                                   handleUpdateSet(ex.id, s.id, 'weight', parseFloat(e.target.value) || 0)
                                 }
-                                className="w-full bg-[#181820] border border-[#23232D] rounded-lg px-2.5 py-1 text-xs font-black text-white font-mono-num outline-none focus:border-[#D4FF00]"
+                                className={`w-full rounded-lg px-2.5 py-1 text-xs font-black font-mono-num outline-none border transition-colors ${
+                                  isLight
+                                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
+                                    : 'bg-[#181820] border-[#23232D] text-white focus:border-[#D4FF00]'
+                                }`}
                               />
-                              <span className="absolute right-2 top-1 text-[10px] text-slate-500">kg</span>
+                              <span className={`absolute right-2 top-1 text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>kg</span>
                             </div>
                           </div>
 
@@ -349,9 +395,13 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                                 onChange={(e) =>
                                   handleUpdateSet(ex.id, s.id, 'reps', parseInt(e.target.value) || 0)
                                 }
-                                className="w-full bg-[#181820] border border-[#23232D] rounded-lg px-2.5 py-1 text-xs font-black text-white font-mono-num outline-none focus:border-[#D4FF00]"
+                                className={`w-full rounded-lg px-2.5 py-1 text-xs font-black font-mono-num outline-none border transition-colors ${
+                                  isLight
+                                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
+                                    : 'bg-[#181820] border-[#23232D] text-white focus:border-[#D4FF00]'
+                                }`}
                               />
-                              <span className="absolute right-2 top-1 text-[10px] text-slate-500">reps</span>
+                              <span className={`absolute right-2 top-1 text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>reps</span>
                             </div>
                           </div>
 
@@ -362,6 +412,8 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                               className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                                 s.completed
                                   ? 'bg-[#D4FF00] text-black shadow-md'
+                                  : isLight
+                                  ? 'bg-slate-100 border border-slate-300 text-slate-400'
                                   : 'bg-[#181820] border border-[#23232D] text-slate-600'
                               }`}
                             >
@@ -376,7 +428,11 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleAddSet(ex.id)}
-                    className="w-full py-1.5 text-xs font-bold text-slate-300 hover:text-[#D4FF00] hover:bg-[#181820] rounded-xl border border-dashed border-[#23232D] hover:border-[#D4FF00]/50 transition-all flex items-center justify-center gap-1"
+                    className={`w-full py-1.5 text-xs font-bold rounded-xl border border-dashed transition-all flex items-center justify-center gap-1 ${
+                      isLight
+                        ? 'text-slate-600 hover:text-lime-700 bg-white hover:bg-slate-50 border-slate-300 hover:border-lime-500'
+                        : 'text-slate-300 hover:text-[#D4FF00] hover:bg-[#181820] border-[#23232D] hover:border-[#D4FF00]/50'
+                    }`}
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>세트 추가</span>
@@ -387,7 +443,7 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
 
             {/* Quick Add Exercise */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 mb-2">
+              <label className={`block text-[11px] font-bold mb-2 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                 + 새 종목 추가:
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -396,9 +452,13 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                     key={opt.id}
                     type="button"
                     onClick={() => handleAddExercise(opt)}
-                    className="px-2.5 py-1 rounded-lg bg-[#0A0A0E] hover:bg-[#181820] border border-[#23232D] hover:border-slate-500 text-xs font-bold text-slate-300 hover:text-white transition-all flex items-center gap-1"
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all flex items-center gap-1 ${
+                      isLight
+                        ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 hover:text-slate-900'
+                        : 'bg-[#0A0A0E] hover:bg-[#181820] border-[#23232D] hover:border-slate-500 text-slate-300 hover:text-white'
+                    }`}
                   >
-                    <Plus className="w-3 h-3 text-[#D4FF00]" />
+                    <Plus className={`w-3 h-3 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
                     <span>{opt.name}</span>
                   </button>
                 ))}
@@ -408,7 +468,7 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
 
           {/* Memo textarea */}
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">
+            <label className={`block text-xs font-bold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
               운동 메모 (컨디션, 특이사항)
             </label>
             <textarea
@@ -416,22 +476,30 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
               onChange={(e) => setMemo(e.target.value)}
               placeholder="오늘 벤치프레스 세트 증량 성공, 어깨 가동범위 양호..."
               rows={2}
-              className="w-full bg-[#0A0A0E] border border-[#23232D] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#D4FF00]"
+              className={`w-full rounded-xl px-3 py-2 text-xs outline-none border transition-colors ${
+                isLight
+                  ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
+                  : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+              }`}
             />
           </div>
 
           {/* Footer Submit */}
-          <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#23232D]">
+          <div className={`pt-2 flex items-center justify-end gap-2 border-t ${isLight ? 'border-slate-200' : 'border-[#23232D]'}`}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-[#0A0A0E] hover:bg-[#181820] border border-[#23232D] transition-all"
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                isLight
+                  ? 'text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border-slate-300'
+                  : 'text-slate-300 hover:text-white bg-[#0A0A0E] hover:bg-[#181820] border-[#23232D]'
+              }`}
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs font-black text-black bg-gradient-to-r from-[#D4FF00] to-[#A3E635] hover:brightness-105 shadow-lg shadow-[#D4FF00]/25 transition-all flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl text-xs font-black text-black bg-[#D4FF00] hover:bg-[#C2EB00] shadow-md shadow-[#D4FF00]/20 active:scale-95 transition-all flex items-center gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>기록 저장 및 볼륨 반영</span>

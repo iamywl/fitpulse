@@ -12,11 +12,13 @@ import { ExerciseAnalyticsSection } from './components/ExerciseAnalyticsSection'
 import { InBodyRecommenderSection } from './components/InBodyRecommenderSection';
 import { WorkoutLogModal } from './components/WorkoutLogModal';
 import { WorkoutDetailModal } from './components/WorkoutDetailModal';
+import { ThemeMode } from './theme/pantone';
 import { LayoutDashboard, CalendarDays, Dumbbell, Calendar, TrendingUp, Activity, Scale, Wifi, Battery } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const STORAGE_WORKOUTS_KEY = 'FITPULSE_WORKOUTS';
 const STORAGE_INBODY_KEY = 'FITPULSE_INBODY';
+const STORAGE_THEME_KEY = 'FITPULSE_THEME';
 
 export function App() {
   const [workouts, setWorkouts] = useState<WorkoutSession[]>(() => {
@@ -27,6 +29,10 @@ export function App() {
     return storageService.getItem<IInBodyData>(STORAGE_INBODY_KEY, INITIAL_INBODY_DATA);
   });
 
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    return storageService.getItem<ThemeMode>(STORAGE_THEME_KEY, 'dark');
+  });
+
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
 
   // Modals & Navigation State
@@ -35,6 +41,24 @@ export function App() {
   const [presetForWorkout, setPresetForWorkout] = useState<IRecommendedWeight | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'split' | 'sets' | 'heatmap' | 'volume' | 'analytics' | 'inbody'>('all');
   const [routineExerciseOverride, setRoutineExerciseOverride] = useState<any>(null);
+
+  const isLight = themeMode === 'light';
+
+  // Theme synchronization with DOM and Storage
+  useEffect(() => {
+    storageService.setItem(STORAGE_THEME_KEY, themeMode);
+    if (themeMode === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    }
+  }, [themeMode]);
+
+  const handleToggleTheme = () => {
+    setThemeMode(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   // LocalStorage Sync
   useEffect(() => {
@@ -182,12 +206,16 @@ export function App() {
   const renderContentSections = () => (
     <div className="space-y-4">
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-[#272732]">
+      <div className={`flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b transition-colors ${
+        isLight ? 'border-slate-200' : 'border-[#272732]'
+      }`}>
         <button
           onClick={() => setActiveTab('all')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'all'
-              ? 'bg-[#CCFF00] text-[#09090B] font-black shadow-md shadow-[#CCFF00]/20'
+              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              : isLight
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
@@ -198,7 +226,9 @@ export function App() {
           onClick={() => setActiveTab('split')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'split'
-              ? 'bg-[#CCFF00] text-[#09090B] font-black shadow-md shadow-[#CCFF00]/20'
+              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              : isLight
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
@@ -209,7 +239,9 @@ export function App() {
           onClick={() => setActiveTab('sets')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'sets'
-              ? 'bg-[#CCFF00] text-[#09090B] font-black shadow-md shadow-[#CCFF00]/20'
+              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              : isLight
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
@@ -220,7 +252,9 @@ export function App() {
           onClick={() => setActiveTab('heatmap')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'heatmap'
-              ? 'bg-[#CCFF00] text-[#09090B] font-black shadow-md shadow-[#CCFF00]/20'
+              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              : isLight
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
@@ -231,7 +265,9 @@ export function App() {
           onClick={() => setActiveTab('volume')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'volume'
-              ? 'bg-[#CCFF00] text-[#09090B] font-black shadow-md shadow-[#CCFF00]/20'
+              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              : isLight
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
@@ -242,7 +278,9 @@ export function App() {
           onClick={() => setActiveTab('analytics')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'analytics'
-              ? 'bg-[#CCFF00] text-[#09090B] font-black shadow-md shadow-[#CCFF00]/20'
+              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              : isLight
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
@@ -253,7 +291,9 @@ export function App() {
           onClick={() => setActiveTab('inbody')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'inbody'
-              ? 'bg-[#CCFF00] text-[#09090B] font-black shadow-md shadow-[#CCFF00]/20'
+              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              : isLight
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
@@ -262,7 +302,7 @@ export function App() {
         </button>
       </div>
 
-      {/* 0. Weekly Split Routine Section (요일별 분할 루틴 핵심 기능) */}
+      {/* 0. Weekly Split Routine Section */}
       {(activeTab === 'all' || activeTab === 'split') && (
         <section>
           <WeeklySplitRoutineSection
@@ -270,17 +310,19 @@ export function App() {
             onSelectRoutineExercise={handleSelectRoutineExercise}
             onQuickLog={handleQuickSimulateToday}
             isMobileView={isMobile}
+            themeMode={themeMode}
           />
         </section>
       )}
 
-      {/* 1. Exercise Set Manager: 직접 무게와 반복수 기입 기능 */}
+      {/* 1. Exercise Set Manager */}
       {(activeTab === 'all' || activeTab === 'sets') && (
         <section>
           <ExerciseSetManager
             workouts={workouts}
             onSaveExerciseSets={handleSaveWorkout}
             isMobileView={isMobile}
+            themeMode={themeMode}
             selectedExerciseOverride={routineExerciseOverride}
           />
         </section>
@@ -294,6 +336,7 @@ export function App() {
             onSelectWorkout={(w) => setSelectedWorkoutDetail(w)}
             onQuickLogToday={handleQuickSimulateToday}
             isMobileView={isMobile}
+            themeMode={themeMode}
           />
         </section>
       )}
@@ -304,6 +347,7 @@ export function App() {
           <VolumeProgressionSection
             workouts={workouts}
             isMobileView={isMobile}
+            themeMode={themeMode}
           />
         </section>
       )}
@@ -314,6 +358,7 @@ export function App() {
           <ExerciseAnalyticsSection
             workouts={workouts}
             isMobileView={isMobile}
+            themeMode={themeMode}
           />
         </section>
       )}
@@ -326,6 +371,7 @@ export function App() {
             onUpdateInBody={setInbodyData}
             onApplyRecommendationToWorkout={handleApplyRecommendationToWorkout}
             isMobileView={isMobile}
+            themeMode={themeMode}
           />
         </section>
       )}
@@ -333,12 +379,18 @@ export function App() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0E] text-slate-100 flex flex-col antialiased selection:bg-[#D4FF00] selection:text-black">
+    <div
+      className={`min-h-screen flex flex-col antialiased selection:bg-[#D4FF00] selection:text-black transition-colors ${
+        isLight ? 'bg-slate-100/70 text-slate-900' : 'bg-[#0A0A0E] text-slate-100'
+      }`}
+    >
       {/* GNB Header */}
       <Header
         currentStreak={streak.currentStreak}
         viewMode={viewMode}
+        themeMode={themeMode}
         onToggleViewMode={setViewMode}
+        onToggleTheme={handleToggleTheme}
         onOpenLogModal={() => {
           setPresetForWorkout(null);
           setIsLogModalOpen(true);
@@ -352,31 +404,47 @@ export function App() {
       <main className="flex-1 w-full mx-auto px-2 sm:px-4 lg:px-8 py-4 flex justify-center">
         {viewMode === 'mobile' ? (
           /* Mobile Smartphone Simulator Frame */
-          <div className="relative w-full max-w-[420px] bg-[#0A0A0E] rounded-[48px] p-3 shadow-[0_25px_80px_-15px_rgba(0,0,0,0.98)] border-[6px] border-[#1F1F28] ring-1 ring-[#D4FF00]/25 flex flex-col my-2">
+          <div
+            className={`relative w-full max-w-[420px] rounded-[48px] p-3 shadow-2xl border-[6px] flex flex-col my-2 transition-colors ${
+              isLight
+                ? 'bg-white border-slate-300 shadow-slate-300/60 ring-1 ring-lime-500/30'
+                : 'bg-[#0A0A0E] border-[#1F1F28] shadow-[0_25px_80px_-15px_rgba(0,0,0,0.98)] ring-1 ring-[#D4FF00]/25'
+            }`}
+          >
             {/* Dynamic Island / Status Bar */}
-            <div className="relative z-30 flex justify-between items-center px-6 pt-2 pb-1 text-xs text-slate-400 select-none">
-              <span className="font-black text-white font-mono-num">9:41</span>
-              <div className="w-24 h-5 bg-black rounded-full flex items-center justify-center border border-[#1F1F28]">
+            <div className={`relative z-30 flex justify-between items-center px-6 pt-2 pb-1 text-xs select-none ${
+              isLight ? 'text-slate-600' : 'text-slate-400'
+            }`}>
+              <span className={`font-black font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>9:41</span>
+              <div className={`w-24 h-5 rounded-full flex items-center justify-center border ${
+                isLight ? 'bg-slate-900 border-slate-700' : 'bg-black border-[#1F1F28]'
+              }`}>
                 <div className="w-2.5 h-2.5 rounded-full bg-[#121217] mr-2" />
                 <div className="w-2 h-2 rounded-full bg-[#D4FF00] shadow-[0_0_8px_#D4FF00]" />
               </div>
               <div className="flex items-center gap-1.5">
-                <Wifi className="w-3.5 h-3.5 text-slate-300" />
-                <Battery className="w-4 h-4 text-slate-300" />
+                <Wifi className="w-3.5 h-3.5" />
+                <Battery className="w-4 h-4" />
               </div>
             </div>
 
             {/* Scrollable Mobile App Body */}
-            <div className="flex-1 overflow-y-auto max-h-[780px] px-1 py-3 scrollbar-thin scrollbar-thumb-slate-700">
+            <div className={`flex-1 overflow-y-auto max-h-[780px] px-1 py-3 scrollbar-thin ${
+              isLight ? 'scrollbar-thumb-slate-300' : 'scrollbar-thumb-slate-700'
+            }`}>
               {renderContentSections()}
             </div>
 
             {/* Mobile Bottom Navigation Bar */}
-            <div className="mt-2 pt-2 border-t border-[#1F1F28] flex justify-around items-center bg-[#0A0A0E] rounded-b-[40px] py-1">
+            <div className={`mt-2 pt-2 border-t flex justify-around items-center rounded-b-[40px] py-1 transition-colors ${
+              isLight ? 'bg-white border-slate-200' : 'bg-[#0A0A0E] border-[#1F1F28]'
+            }`}>
               <button
                 onClick={() => setActiveTab('split')}
                 className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'split' ? 'text-[#CCFF00]' : 'text-[#94A3B8] hover:text-white'
+                  activeTab === 'split'
+                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-[#94A3B8] hover:text-white'
                 }`}
               >
                 <CalendarDays className="w-4 h-4" />
@@ -385,7 +453,9 @@ export function App() {
               <button
                 onClick={() => setActiveTab('sets')}
                 className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'sets' ? 'text-[#D4FF00]' : 'text-slate-400 hover:text-white'
+                  activeTab === 'sets'
+                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Dumbbell className="w-4 h-4" />
@@ -394,7 +464,9 @@ export function App() {
               <button
                 onClick={() => setActiveTab('heatmap')}
                 className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'heatmap' ? 'text-[#D4FF00]' : 'text-slate-400 hover:text-white'
+                  activeTab === 'heatmap'
+                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Calendar className="w-4 h-4" />
@@ -403,7 +475,9 @@ export function App() {
               <button
                 onClick={() => setActiveTab('volume')}
                 className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'volume' ? 'text-[#D4FF00]' : 'text-slate-400 hover:text-white'
+                  activeTab === 'volume'
+                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <TrendingUp className="w-4 h-4" />
@@ -412,7 +486,9 @@ export function App() {
               <button
                 onClick={() => setActiveTab('inbody')}
                 className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'inbody' ? 'text-[#D4FF00]' : 'text-slate-400 hover:text-white'
+                  activeTab === 'inbody'
+                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Scale className="w-4 h-4" />
@@ -421,7 +497,7 @@ export function App() {
             </div>
 
             {/* iOS Bottom Home Bar */}
-            <div className="w-32 h-1 bg-slate-600 rounded-full mx-auto mt-2 mb-1" />
+            <div className={`w-32 h-1 rounded-full mx-auto mt-2 mb-1 ${isLight ? 'bg-slate-400' : 'bg-slate-600'}`} />
           </div>
         ) : (
           /* Desktop Wide Layout */
@@ -432,12 +508,14 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#23232D] py-5 px-4 text-center text-xs text-slate-400 mt-8 bg-[#0A0A0E]">
+      <footer className={`border-t py-5 px-4 text-center text-xs mt-8 transition-colors ${
+        isLight ? 'bg-white border-slate-200 text-slate-500' : 'bg-[#0A0A0E] border-[#23232D] text-slate-400'
+      }`}>
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>FitPulse MVP Prototype · 헬스 볼륨 & 잔디 관측 트래커</span>
-          <div className="flex gap-4 text-slate-400">
-            <span>기능명세서: <code className="text-[#D4FF00] font-bold">docs/SPECIFICATION.md</code></span>
-            <span>에이전트 지침: <code className="text-[#D4FF00] font-bold">AGENTS.md</code></span>
+          <div className="flex gap-4">
+            <span>기능명세서: <code className={`font-bold ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>docs/SPECIFICATION.md</code></span>
+            <span>에이전트 지침: <code className={`font-bold ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>AGENTS.md</code></span>
           </div>
         </div>
       </footer>
@@ -452,6 +530,7 @@ export function App() {
           }}
           onSaveWorkout={handleSaveWorkout}
           initialPreset={presetForWorkout}
+          themeMode={themeMode}
         />
       )}
 
@@ -460,8 +539,10 @@ export function App() {
           workout={selectedWorkoutDetail}
           onClose={() => setSelectedWorkoutDetail(null)}
           onDelete={handleDeleteWorkout}
+          themeMode={themeMode}
         />
       )}
     </div>
   );
 }
+

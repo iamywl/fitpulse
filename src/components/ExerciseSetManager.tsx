@@ -4,10 +4,13 @@ import { VolumeService } from '../services/calculator/VolumeService';
 import { Plus, Trash2, Dumbbell, Sparkles, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import { ThemeMode } from '../theme/pantone';
+
 interface ExerciseSetManagerProps {
   workouts: WorkoutSession[];
   onSaveExerciseSets: (session: WorkoutSession) => void;
   isMobileView?: boolean;
+  themeMode?: ThemeMode;
   selectedExerciseOverride?: {
     exerciseId: string;
     exerciseName: string;
@@ -31,8 +34,11 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
   workouts,
   onSaveExerciseSets,
   isMobileView = false,
+  themeMode = 'dark',
   selectedExerciseOverride,
 }) => {
+  const isLight = themeMode === 'light';
+
   const [selectedExId, setSelectedExId] = useState<string>(
     selectedExerciseOverride?.exerciseId || 'bench-press'
   );
@@ -135,17 +141,23 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
   };
 
   return (
-    <div className="bg-[#121217] border border-[#23232D] rounded-3xl p-4 sm:p-6 shadow-2xl relative">
+    <div
+      className={`border rounded-3xl p-4 sm:p-6 shadow-xl relative transition-colors ${
+        isLight
+          ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100'
+          : 'bg-[#121217] border-[#272732] text-white shadow-2xl'
+      }`}
+    >
       {/* Header */}
       <div className={`flex ${isMobileView ? 'flex-col gap-2.5' : 'flex-col sm:flex-row sm:items-center sm:justify-between'} mb-4`}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Dumbbell className="w-5 h-5 text-[#D4FF00]" />
-            <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+            <Dumbbell className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
+            <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
               종목별 세트 & 반복수(Reps) 간편 기록
             </h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
             종목별로 무게(kg)와 반복횟수를 직접 입력하고 즉시 잔디와 볼륨에 반영합니다.
           </p>
         </div>
@@ -154,7 +166,11 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         <select
           value={selectedExId}
           onChange={(e) => setSelectedExId(e.target.value)}
-          className="bg-[#0A0A0E] border border-[#23232D] text-white text-xs sm:text-sm font-black rounded-xl px-3 py-2 outline-none focus:border-[#D4FF00] cursor-pointer shadow-inner"
+          className={`text-xs sm:text-sm font-black rounded-xl px-3 py-2 outline-none cursor-pointer border transition-colors ${
+            isLight
+              ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
+              : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+          }`}
         >
           {EXERCISE_OPTIONS.map(opt => (
             <option key={opt.id} value={opt.id}>
@@ -164,23 +180,38 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         </select>
       </div>
 
-      {/* Summary Badges: High Contrast */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-[#0A0A0E] border border-[#23232D] p-3 rounded-2xl mb-4">
+      {/* Summary Badges: High Contrast & Equal Proportions */}
+      <div
+        className={`grid grid-cols-3 gap-2.5 p-3 rounded-2xl mb-4 border transition-colors ${
+          isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'
+        }`}
+      >
         <div>
-          <div className="text-[10px] font-bold text-slate-400">종목 총 볼륨</div>
-          <div className="text-base font-black text-[#D4FF00] font-mono-num">
-            {VolumeService.formatKg(exerciseVolume)}
+          <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>종목 총 볼륨</div>
+          <div className="flex items-baseline gap-0.5">
+            <span className={`text-base font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
+              {VolumeService.formatKg(exerciseVolume)}
+            </span>
           </div>
         </div>
         <div>
-          <div className="text-[10px] font-bold text-slate-400">최고 추정 1RM</div>
-          <div className="text-base font-black text-[#38BDF8] font-mono-num">
-            {best1RM} kg
+          <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>최고 추정 1RM</div>
+          <div className="flex items-baseline gap-0.5">
+            <span className={`text-base font-black font-mono-num ${isLight ? 'text-sky-700' : 'text-[#38BDF8]'}`}>
+              {best1RM}
+            </span>
+            <span className={`text-[11px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>kg</span>
           </div>
         </div>
-        <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
-          <div className="text-xs font-bold text-slate-300 bg-[#181820] px-3 py-1 rounded-xl border border-[#23232D]">
-            완료: <strong className="text-white font-mono-num">{sets.filter(s => s.completed).length}</strong> / {sets.length}세트
+        <div className="flex items-center justify-end">
+          <div
+            className={`text-xs font-bold px-2.5 py-1 rounded-xl border text-center ${
+              isLight
+                ? 'bg-white text-slate-700 border-slate-200 shadow-sm'
+                : 'bg-[#181820] text-slate-300 border-[#23232D]'
+            }`}
+          >
+            완료: <strong className={`font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>{sets.filter(s => s.completed).length}</strong> / {sets.length}
           </div>
         </div>
       </div>
@@ -190,43 +221,65 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         {sets.map((set) => (
           <div
             key={set.id}
-            className={`bg-[#0A0A0E] border rounded-2xl p-3 sm:p-3.5 transition-all ${
-              set.completed ? 'border-[#D4FF00]/40 ring-1 ring-[#D4FF00]/15' : 'border-[#23232D] opacity-65'
+            className={`border rounded-2xl p-3 sm:p-3.5 transition-all ${
+              set.completed
+                ? isLight
+                  ? 'bg-white border-lime-400/60 ring-1 ring-lime-500/20 shadow-sm'
+                  : 'bg-[#0A0A0E] border-[#D4FF00]/40 ring-1 ring-[#D4FF00]/15'
+                : isLight
+                ? 'bg-slate-50 border-slate-200 opacity-70'
+                : 'bg-[#0A0A0E] border-[#23232D] opacity-65'
             }`}
           >
-            {/* Top row: Set # & Quick +/- Chips */}
-            <div className="flex items-center justify-between gap-2 mb-2">
+            {/* Top row: Set # & Quick +/- Chips (min-h-[34px] for ergonomic thumb tap) */}
+            <div className="flex items-center justify-between gap-2 mb-2.5">
               <div className="flex items-center gap-2">
-                <span className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${
-                  set.completed ? 'bg-[#D4FF00] text-black shadow-sm' : 'bg-[#181820] text-slate-400'
-                }`}>
+                <span
+                  className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${
+                    set.completed
+                      ? 'bg-[#D4FF00] text-black shadow-sm'
+                      : isLight ? 'bg-slate-200 text-slate-600' : 'bg-[#181820] text-slate-400'
+                  }`}
+                >
                   #{set.setNumber}
                 </span>
-                <span className="text-xs font-extrabold text-white">
+                <span className={`text-xs font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {set.isWarmup ? '웜업 세트' : '본세트'}
                 </span>
               </div>
 
-              {/* Weight Quick Buttons */}
-              <div className="flex items-center gap-1">
+              {/* Weight Quick Buttons (High-contrast, expanded touch area) */}
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => handleAdjustWeight(set.id, -2.5)}
-                  className="px-2 py-0.5 rounded-lg bg-[#181820] hover:bg-[#23232D] text-[11px] font-black text-slate-300 hover:text-white border border-[#23232D]"
+                  className={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black border transition-all ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                      : 'bg-[#181820] hover:bg-[#23232D] text-slate-300 hover:text-white border-[#23232D]'
+                  }`}
                 >
                   -2.5
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAdjustWeight(set.id, 2.5)}
-                  className="px-2 py-0.5 rounded-lg bg-[#181820] hover:bg-[#23232D] text-[11px] font-black text-[#D4FF00] border border-[#23232D]"
+                  className={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black border transition-all ${
+                    isLight
+                      ? 'bg-lime-50 hover:bg-lime-100 text-lime-800 border-lime-300'
+                      : 'bg-[#181820] hover:bg-[#23232D] text-[#D4FF00] border-[#23232D]'
+                  }`}
                 >
                   +2.5
                 </button>
                 <button
                   type="button"
                   onClick={() => handleAdjustWeight(set.id, 5)}
-                  className="px-2 py-0.5 rounded-lg bg-[#181820] hover:bg-[#23232D] text-[11px] font-black text-[#D4FF00] border border-[#23232D]"
+                  className={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black border transition-all ${
+                    isLight
+                      ? 'bg-lime-50 hover:bg-lime-100 text-lime-800 border-lime-300'
+                      : 'bg-[#181820] hover:bg-[#23232D] text-[#D4FF00] border-[#23232D]'
+                  }`}
                 >
                   +5
                 </button>
@@ -234,19 +287,22 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemoveSet(set.id)}
-                    className="p-1 text-slate-500 hover:text-rose-400 ml-1"
+                    className="p-1.5 text-slate-400 hover:text-rose-500 ml-1 rounded-lg"
+                    aria-label="세트 삭제"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Inputs Grid: Weight (kg) & Reps (회) & Complete Button */}
-            <div className="grid grid-cols-12 gap-2.5 items-center">
-              {/* Weight Input */}
+            {/* Inputs Grid: Weight (5) & Reps (4) & Complete (3) */}
+            <div className="grid grid-cols-12 gap-2 items-center">
+              {/* Weight Input (5 cols) */}
               <div className="col-span-5">
-                <div className="text-[10px] font-black text-slate-400 mb-0.5">무게 (kg)</div>
+                <div className={`text-[10px] font-black mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  무게 (kg)
+                </div>
                 <div className="relative">
                   <input
                     type="number"
@@ -256,20 +312,34 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
                       const val = parseFloat(e.target.value) || 0;
                       setSets(prev => prev.map(s => s.id === set.id ? { ...s, weight: val } : s));
                     }}
-                    className="w-full bg-[#181820] border border-[#23232D] rounded-xl px-3 py-1.5 text-sm font-black text-white font-mono-num outline-none focus:border-[#D4FF00]"
+                    className={`w-full border rounded-xl px-2.5 py-1.5 text-sm font-black font-mono-num outline-none transition-colors ${
+                      isLight
+                        ? 'bg-white border-slate-300 text-slate-900 focus:border-lime-600'
+                        : 'bg-[#181820] border-[#23232D] text-white focus:border-[#D4FF00]'
+                    }`}
                   />
-                  <span className="absolute right-2.5 top-1.5 text-xs text-slate-500 font-bold">kg</span>
+                  <span className={`absolute right-2 top-1.5 text-xs font-bold ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                    kg
+                  </span>
                 </div>
               </div>
 
-              {/* Reps Input with Stepper */}
-              <div className="col-span-5">
-                <div className="text-[10px] font-black text-slate-400 mb-0.5">반복 횟수 (회)</div>
-                <div className="flex items-center bg-[#181820] border border-[#23232D] rounded-xl overflow-hidden">
+              {/* Reps Input with Stepper (4 cols) */}
+              <div className="col-span-4">
+                <div className={`text-[10px] font-black mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  반복 (회)
+                </div>
+                <div
+                  className={`flex items-center border rounded-xl overflow-hidden ${
+                    isLight ? 'bg-white border-slate-300' : 'bg-[#181820] border-[#23232D]'
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => handleAdjustReps(set.id, -1)}
-                    className="px-2.5 py-1.5 text-xs font-black text-slate-400 hover:text-white bg-[#121217]"
+                    className={`w-8 h-8 flex items-center justify-center text-xs font-black transition-colors ${
+                      isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#121217] text-slate-400 hover:text-white'
+                    }`}
                   >
                     -
                   </button>
@@ -280,27 +350,35 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
                       const val = parseInt(e.target.value) || 1;
                       setSets(prev => prev.map(s => s.id === set.id ? { ...s, reps: val } : s));
                     }}
-                    className="w-full text-center bg-transparent text-sm font-black text-white font-mono-num outline-none py-1"
+                    className={`w-full text-center bg-transparent text-sm font-black font-mono-num outline-none py-1 ${
+                      isLight ? 'text-slate-900' : 'text-white'
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={() => handleAdjustReps(set.id, 1)}
-                    className="px-2.5 py-1.5 text-xs font-black text-slate-400 hover:text-white bg-[#121217]"
+                    className={`w-8 h-8 flex items-center justify-center text-xs font-black transition-colors ${
+                      isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#121217] text-slate-400 hover:text-white'
+                    }`}
                   >
                     +
                   </button>
                 </div>
               </div>
 
-              {/* Complete Toggle Checkmark */}
-              <div className="col-span-2 flex flex-col items-center justify-center">
-                <div className="text-[10px] font-black text-slate-400 mb-0.5">완료</div>
+              {/* Complete Toggle Checkmark (3 cols) */}
+              <div className="col-span-3 flex flex-col items-center justify-center">
+                <div className={`text-[10px] font-black mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  완료
+                </div>
                 <button
                   type="button"
                   onClick={() => handleToggleComplete(set.id)}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                  className={`w-full max-w-[54px] h-8 rounded-xl flex items-center justify-center transition-all ${
                     set.completed
-                      ? 'bg-[#D4FF00] text-black shadow-lg shadow-[#D4FF00]/30 scale-105'
+                      ? 'bg-[#D4FF00] text-black shadow-md shadow-[#D4FF00]/25'
+                      : isLight
+                      ? 'bg-slate-100 border border-slate-300 text-slate-400 hover:border-slate-400'
                       : 'bg-[#181820] border border-[#23232D] text-slate-600 hover:border-slate-400'
                   }`}
                 >
@@ -317,7 +395,11 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         <button
           type="button"
           onClick={handleAddSet}
-          className="w-full sm:flex-1 py-2.5 rounded-xl bg-[#0A0A0E] hover:bg-[#181820] border border-dashed border-[#23232D] hover:border-[#D4FF00]/50 text-xs font-black text-slate-300 hover:text-[#D4FF00] transition-all flex items-center justify-center gap-1.5"
+          className={`w-full sm:flex-1 py-2.5 rounded-xl border border-dashed text-xs font-black transition-all flex items-center justify-center gap-1.5 min-h-[42px] ${
+            isLight
+              ? 'bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-700 hover:border-lime-500'
+              : 'bg-[#0A0A0E] hover:bg-[#181820] border-[#23232D] hover:border-[#D4FF00]/50 text-slate-300 hover:text-[#D4FF00]'
+          }`}
         >
           <Plus className="w-4 h-4" />
           <span>세트 추가 (+Set)</span>
@@ -326,7 +408,7 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         <button
           type="button"
           onClick={handleSaveToToday}
-          className="w-full sm:flex-1 py-3 rounded-xl bg-gradient-to-r from-[#D4FF00] to-[#A3E635] text-black text-xs sm:text-sm font-black shadow-lg shadow-[#D4FF00]/25 hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+          className="w-full sm:flex-1 py-2.5 rounded-xl bg-[#D4FF00] hover:bg-[#C2EB00] text-black text-xs sm:text-sm font-black shadow-md shadow-[#D4FF00]/25 active:scale-95 transition-all flex items-center justify-center gap-2 min-h-[42px]"
         >
           <Sparkles className="w-4 h-4" />
           <span>오늘 운동 기록에 즉시 저장</span>
@@ -335,3 +417,4 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
     </div>
   );
 };
+

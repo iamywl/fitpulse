@@ -4,14 +4,61 @@
 
 :root {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  color-scheme: dark light;
+
+  /* Default Dark Mode CSS Variables */
+  --fp-bg-base: #09090B;
+  --fp-surface-card: #111115;
+  --fp-surface-hover: #18181F;
+  --fp-surface-elevated: #1F1F27;
+  --fp-border-subtle: #272732;
+  --fp-border-strong: #3F3F50;
+  --fp-text-primary: #FFFFFF;
+  --fp-text-secondary: #94A3B8;
+  --fp-text-muted: #64748B;
+  --fp-accent-volt: #D4FF00;
+  --fp-accent-cyan: #38BDF8;
+  --fp-accent-crimson: #FF334B;
+}
+
+html.light, body.light {
+  color-scheme: light;
+  --fp-bg-base: #FFFFFF;
+  --fp-surface-card: #F8FAFC;
+  --fp-surface-hover: #F1F5F9;
+  --fp-surface-elevated: #FFFFFF;
+  --fp-border-subtle: #E2E8F0;
+  --fp-border-strong: #CBD5E1;
+  --fp-text-primary: #0F172A;
+  --fp-text-secondary: #334155;
+  --fp-text-muted: #64748B;
+  --fp-accent-volt: #3F6212;
+  --fp-accent-cyan: #0284C7;
+  --fp-accent-crimson: #DC2626;
+}
+
+html.dark, body.dark {
   color-scheme: dark;
+  --fp-bg-base: #09090B;
+  --fp-surface-card: #111115;
+  --fp-surface-hover: #18181F;
+  --fp-surface-elevated: #1F1F27;
+  --fp-border-subtle: #272732;
+  --fp-border-strong: #3F3F50;
+  --fp-text-primary: #FFFFFF;
+  --fp-text-secondary: #94A3B8;
+  --fp-text-muted: #64748B;
+  --fp-accent-volt: #D4FF00;
+  --fp-accent-cyan: #38BDF8;
+  --fp-accent-crimson: #FF334B;
 }
 
 body {
   margin: 0;
-  background-color: #090d16;
-  color: #f1f5f9;
+  background-color: var(--fp-bg-base);
+  color: var(--fp-text-primary);
   overflow-x: hidden;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 /* Custom Scrollbars */
