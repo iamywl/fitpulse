@@ -152,28 +152,29 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Quick Mock Data load */}
           <button
             onClick={onResetMockData}
-            title="1개월치 시연용 데이터 로드"
-            className={`hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+            title="1개월치 시연용 샘플 데이터 로드"
+            className={`flex items-center gap-1 px-2 py-1.5 sm:px-2.5 rounded-xl text-xs font-bold border transition-all ${
               isLight
-                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'
+                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 shadow-sm'
                 : 'text-slate-300 bg-[#121217] hover:bg-[#181820] border-[#23232D] hover:text-white'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#0284C7] dark:text-[#38BDF8]" />
-            <span>샘플</span>
+            <span className="hidden xs:inline">샘플</span>
           </button>
 
-          {/* Reset */}
+          {/* Reset All Data to Empty State */}
           <button
             onClick={onClearData}
-            title="초기화"
-            className={`hidden xl:flex items-center p-2 rounded-xl text-xs border border-transparent transition-all ${
+            title="초기 상태로 초기화 (데이터 비우기)"
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold border transition-all ${
               isLight
-                ? 'text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200'
-                : 'text-slate-400 hover:text-[#FF3B56] hover:bg-[#121217] hover:border-[#FF3B56]/30'
+                ? 'text-slate-500 hover:text-red-600 hover:bg-red-50 border-slate-200'
+                : 'text-slate-400 hover:text-[#FF3B56] hover:bg-[#121217] border-[#23232D] hover:border-[#FF3B56]/40'
             }`}
           >
             <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">초기화</span>
           </button>
 
           {/* New Workout CTA */}

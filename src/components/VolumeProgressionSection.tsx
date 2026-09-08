@@ -77,10 +77,20 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
 
   if (!currentSession || !previousSession || !comparison) {
     return (
-      <div className="bg-[#121217] border border-[#23232D] rounded-3xl p-5 text-center text-slate-300">
+      <div
+        className={`border rounded-3xl p-6 text-center transition-colors ${
+          isLight
+            ? 'bg-white border-slate-200 text-slate-700 shadow-sm'
+            : 'bg-[#121217] border-[#23232D] text-slate-300 shadow-xl'
+        }`}
+      >
         <Zap className="w-8 h-8 mx-auto mb-2 text-[#FFB703] opacity-80" />
-        <p className="text-sm font-black text-white">볼륨 비교를 위해 최소 2개 이상의 운동 기록이 필요합니다.</p>
-        <p className="text-xs text-slate-400 mt-1">상단 "샘플 로드"를 누르면 즉시 이전 세션 대비 볼륨 변화를 확인할 수 있습니다.</p>
+        <p className={`text-sm font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
+          볼륨 비교를 위해 최소 2개 이상의 운동 기록이 필요합니다.
+        </p>
+        <p className={`text-xs mt-1 max-w-md mx-auto ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+          오늘 운동을 완료하거나, 상단의 <strong>[샘플]</strong> 버튼을 누르면 즉시 1개월 치 데이터와 점진적 과부하 그래프를 체험할 수 있습니다.
+        </p>
       </div>
     );
   }

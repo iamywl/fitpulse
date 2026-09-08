@@ -193,6 +193,28 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
         </div>
       </div>
 
+      {/* Empty State Banner if no workouts yet */}
+      {workouts.length === 0 && (
+        <div className={`p-3.5 mb-3 rounded-2xl border text-xs flex flex-col sm:flex-row items-center justify-between gap-2.5 transition-colors ${
+          isLight ? 'bg-amber-50/80 border-amber-200 text-amber-900' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+        }`}>
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 flex-shrink-0 text-amber-500" />
+            <span>아직 저장된 운동 기록이 없습니다. 오늘 운동을 완료하여 첫 번째 잔디를 심어보세요!</span>
+          </div>
+          {onQuickLogToday && (
+            <button
+              onClick={onQuickLogToday}
+              className={`px-3 py-1 rounded-xl text-xs font-black transition-all flex-shrink-0 ${
+                isLight ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-amber-400 hover:bg-amber-300 text-black font-black'
+              }`}
+            >
+              오늘 잔디 심기
+            </button>
+          )}
+        </div>
+      )}
+
       {/* GitHub Style Heatmap Grid */}
       <div className="relative">
         <div className={`overflow-x-auto pb-2 scrollbar-thin ${isLight ? 'scrollbar-thumb-slate-300' : 'scrollbar-thumb-slate-700'}`}>

@@ -27,7 +27,16 @@ export const ExerciseAnalyticsSection: React.FC<ExerciseAnalyticsSectionProps> =
         }
       });
     });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    const list = Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    if (list.length === 0) {
+      return [
+        { id: 'bench-press', name: '바벨 벤치프레스' },
+        { id: 'squat', name: '바벨 백스쿼트' },
+        { id: 'deadlift', name: '컨벤셔널 데드리프트' },
+        { id: 'ohp', name: '오버헤드 프레스 (OHP)' },
+      ];
+    }
+    return list;
   }, [workouts]);
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>(
