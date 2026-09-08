@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { WorkoutSession, IExerciseLog, IExerciseSet, IWeeklySplitDay, IWeeklySplitExercise } from '../models/fitness';
 import { DEFAULT_WEEKLY_SPLIT } from '../data/splitRoutineData';
+import { MASTER_EXERCISE_LIBRARY, IMasterExercise } from '../data/exerciseLibrary';
+import { RoutineService } from '../services/routine/RoutineService';
 import { VolumeService } from '../services/calculator/VolumeService';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
@@ -11,7 +13,10 @@ import {
   Sparkles, 
   Trash2, 
   ChevronRight, 
-  Plus
+  Plus,
+  Dumbbell,
+  X,
+  Repeat
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -29,6 +34,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
   workouts,
   onSaveWorkoutSession,
   splitList = DEFAULT_WEEKLY_SPLIT,
+  onUpdateSplit,
   isMobileView = false,
   themeMode = 'dark',
   onNavigateTab,
@@ -117,8 +123,81 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
   const [timerExerciseName, setTimerExerciseName] = useState<string>('운동');
   const [timerRestDuration, setTimerRestDuration] = useState<number>(90);
 
+  // Exercise Picker Modal & Muscle Category Filter State
+  const [isExercisePickerOpen, setIsExercisePickerOpen] = useState<boolean>(false);
+  const [pickerMode, setPickerMode] = useState<'replace' | 'add'>('replace');
+  const [selectedMuscleCategory, setSelectedMuscleCategory] = useState<string>('all');
+  const [searchExerciseQuery, setSearchExerciseQuery] = useState<string>('');
+
   const currentExercise: IWeeklySplitExercise | undefined = todaySplitDay.exercises[activeExerciseIndex];
   const currentSets: IExerciseSet[] = currentExercise ? (exerciseSetsMap[currentExercise.id] || []) : [];
+
+  // Filtered exercises from Master Library
+  const filteredLibraryExercises = useMemo(() => {
+    return MASTER_EXERCISE_LIBRARY.filter(ex => {
+      const matchesCategory = selectedMuscleCategory === 'all' || ex.category === selectedMuscleCategory;
+      const matchesQuery = !searchExerciseQuery.trim() || 
+        ex.name.toLowerCase().includes(searchExerciseQuery.toLowerCase()) || 
+        ex.targetMuscle.toLowerCase().includes(searchExerciseQuery.toLowerCase());
+      return matchesCategory && matchesQuery;
+    });
+  }, [selectedMuscleCategory, searchExerciseQuery]);
+
+  // Handler for selecting an exercise from library (replace or add)
+  const handleSelectLibraryExercise = (masterEx: IMasterExercise) => {
+    const defaultWeight = masterEx.category === 'legs' ? 80 :
+                          masterEx.category === 'back' ? 70 :
+                          masterEx.category === 'chest' ? 60 :
+                          masterEx.category === 'shoulders' ? 40 : 25;
+
+    const newSplitEx: IWeeklySplitExercise = {
+      id: `custom-ex-${Date.now()}`,
+      name: masterEx.name,
+      targetMuscle: masterEx.targetMuscle,
+      sets: masterEx.defaultSets,
+      reps: masterEx.defaultReps,
+      intensity: masterEx.intensity,
+      restSeconds: masterEx.defaultRestSeconds,
+      target1RMPercent: masterEx.target1RMPercent,
+      tip: masterEx.tip,
+    };
+
+    // Initialize sets for the newly selected exercise
+    const newSets: IExerciseSet[] = Array.from({ length: masterEx.defaultSets }, (_, i) => ({
+      id: `set-${newSplitEx.id}-${i + 1}`,
+      setNumber: i + 1,
+      weight: defaultWeight + (i > 0 ? i * 2.5 : 0),
+      reps: parseInt(masterEx.defaultReps) || 10,
+      completed: false,
+      isWarmup: i === 0,
+    }));
+
+    setExerciseSetsMap(prev => ({
+      ...prev,
+      [newSplitEx.id]: newSets,
+    }));
+
+    // Update the today's exercises in splitList
+    const updatedTodayExercises = pickerMode === 'replace' && currentExercise
+      ? todaySplitDay.exercises.map((ex, idx) => idx === activeExerciseIndex ? newSplitEx : ex)
+      : [...todaySplitDay.exercises, newSplitEx];
+
+    const updatedSplitDay: IWeeklySplitDay = {
+      ...todaySplitDay,
+      exercises: updatedTodayExercises,
+    };
+
+    const updatedFullSplit = splitList.map(d => d.dayIndex === todaySplitDay.dayIndex ? updatedSplitDay : d);
+    RoutineService.saveWeeklySplit(updatedFullSplit);
+    if (onUpdateSplit) {
+      onUpdateSplit(updatedFullSplit);
+    }
+
+    if (pickerMode === 'add') {
+      setActiveExerciseIndex(updatedTodayExercises.length - 1);
+    }
+    setIsExercisePickerOpen(false);
+  };
 
   // Completed counts across all exercises today
   const totalExercisesCount = todaySplitDay.exercises.length;
@@ -317,23 +396,26 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
           </div>
 
           {/* Quick Stats: Volume & Completion */}
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-2xl border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className={`px-3 py-2 rounded-2xl border min-w-[96px] ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0E0E14] border-[#22222E]'}`}>
               <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>오늘 누적 볼륨</div>
-              <div className="flex items-baseline gap-0.5">
-                <span className={`text-base font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
-                  {VolumeService.formatKg(todayLiveVolume)}
+              <div className="flex items-baseline gap-1 whitespace-nowrap">
+                <span className={`text-base sm:text-lg font-black font-mono-num tracking-tight ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
+                  {Math.round(todayLiveVolume).toLocaleString()}
+                </span>
+                <span className={`text-xs font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  kg
                 </span>
               </div>
             </div>
 
-            <div className={`p-2.5 rounded-2xl border ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
+            <div className={`px-3 py-2 rounded-2xl border min-w-[90px] ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0E0E14] border-[#22222E]'}`}>
               <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>진행률</div>
-              <div className="flex items-baseline gap-1 font-mono-num font-black">
-                <span className={`text-base ${completedExercisesCount === totalExercisesCount ? 'text-[#22C55E]' : isLight ? 'text-slate-900' : 'text-white'}`}>
+              <div className="flex items-baseline gap-1 whitespace-nowrap font-mono-num font-black">
+                <span className={`text-base sm:text-lg ${completedExercisesCount === totalExercisesCount ? 'text-[#22C55E]' : isLight ? 'text-slate-900' : 'text-white'}`}>
                   {completedExercisesCount}/{totalExercisesCount}
                 </span>
-                <span className="text-xs text-slate-400">({progressPercent}%)</span>
+                <span className="text-xs text-slate-400 font-semibold">({progressPercent}%)</span>
               </div>
             </div>
           </div>
@@ -348,8 +430,8 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
         </div>
       </div>
 
-      {/* 2. Horizontal Exercise Switcher Carousel / Drawer */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      {/* 2. Horizontal Exercise Switcher Carousel + Add/Replace Drawer Trigger */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
         {todaySplitDay.exercises.map((ex, idx) => {
           const sets = exerciseSetsMap[ex.id] || [];
           const isDone = sets.length > 0 && sets.every(s => s.completed);
@@ -359,28 +441,47 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             <button
               key={ex.id}
               onClick={() => setActiveExerciseIndex(idx)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-2xl border text-xs font-black whitespace-nowrap transition-all flex-shrink-0 min-h-[42px] ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl border text-xs font-black whitespace-nowrap transition-all flex-shrink-0 min-h-[42px] ${
                 isCurrent
-                  ? 'bg-[#D4FF00] text-black border-[#D4FF00] shadow-md shadow-[#D4FF00]/25'
+                  ? 'bg-[#D4FF00] text-black border-[#D4FF00] shadow-sm'
                   : isDone
                   ? isLight
                     ? 'bg-slate-100 border-slate-300 text-slate-400 line-through'
                     : 'bg-[#121217] border-[#272732] text-slate-500 line-through'
                   : isLight
                   ? 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'
-                  : 'bg-[#121217] border-[#272732] text-slate-300 hover:border-slate-500'
+                  : 'bg-[#121217] border-[#23232D] text-slate-300 hover:border-slate-500'
               }`}
             >
-              <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold ${
+              <span className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] font-bold ${
                 isCurrent ? 'bg-black text-[#D4FF00]' : isDone ? 'bg-green-500/20 text-green-500' : 'bg-[#23232D] text-slate-300'
               }`}>
                 {isDone ? <Check className="w-3 h-3 stroke-[3]" /> : idx + 1}
               </span>
               <span>{ex.name}</span>
-              <span className="text-[10px] opacity-75 font-mono">({ex.sets}세트)</span>
+              <span className="text-[10px] opacity-75 font-mono font-normal">({ex.sets}세트)</span>
             </button>
           );
         })}
+
+        {/* Quick Add Exercise Button */}
+        <button
+          type="button"
+          onClick={() => {
+            setPickerMode('add');
+            setSelectedMuscleCategory('all');
+            setIsExercisePickerOpen(true);
+          }}
+          className={`flex items-center gap-1 px-3 py-2 rounded-2xl border border-dashed text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[42px] ${
+            isLight
+              ? 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-300'
+              : 'bg-[#121217] hover:bg-[#1A1A22] text-slate-300 border-[#2C2C3A]'
+          }`}
+          title="오늘 운동에 새 종목 추가하기"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>종목 추가</span>
+        </button>
       </div>
 
       {/* 3. Active Exercise Hero Card & Direct Set Logger */}
@@ -412,10 +513,33 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
               <h2 className="text-lg font-black truncate">{currentExercise.name}</h2>
             </div>
 
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <span className={`text-xs font-mono font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 휴식 {currentExercise.restSeconds}초
               </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setPickerMode('replace');
+                  setSelectedMuscleCategory(
+                    currentExercise.targetMuscle.includes('가슴') ? 'chest' :
+                    currentExercise.targetMuscle.includes('등') ? 'back' :
+                    currentExercise.targetMuscle.includes('하체') ? 'legs' :
+                    currentExercise.targetMuscle.includes('어깨') ? 'shoulders' :
+                    currentExercise.targetMuscle.includes('팔') ? 'arms' : 'all'
+                  );
+                  setIsExercisePickerOpen(true);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-[#181822] hover:bg-[#222230] text-slate-300 border-[#2A2A38]'
+                }`}
+                title="다른 운동 종목으로 교체하기"
+              >
+                <Repeat className="w-3 h-3" />
+                <span>종목 교체</span>
+              </button>
             </div>
           </div>
 
@@ -634,6 +758,159 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
         exerciseName={timerExerciseName}
         themeMode={themeMode}
       />
+
+      {/* 5. Muscle-Group Exercise Picker Modal */}
+      {isExercisePickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className={`w-full max-w-lg rounded-3xl border shadow-2xl flex flex-col max-h-[88vh] overflow-hidden ${
+              isLight
+                ? 'bg-white border-slate-200 text-slate-900'
+                : 'bg-[#121217] border-[#272734] text-white'
+            }`}
+          >
+            {/* Modal Header */}
+            <div className={`p-4 border-b flex items-center justify-between ${isLight ? 'border-slate-200 bg-slate-50/50' : 'border-[#22222E] bg-[#16161D]'}`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
+                  isLight ? 'bg-lime-100 border-lime-300 text-lime-800' : 'bg-[#D4FF00]/10 border-[#D4FF00]/30 text-[#D4FF00]'
+                }`}>
+                  <Dumbbell className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black">
+                    {pickerMode === 'replace' ? '운동 종목 교체하기' : '새 운동 종목 추가하기'}
+                  </h3>
+                  <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    부위별로 원하는 운동을 선택하세요
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsExercisePickerOpen(false)}
+                className={`p-1.5 rounded-xl border transition-colors ${
+                  isLight
+                    ? 'hover:bg-slate-200 border-slate-300 text-slate-600'
+                    : 'hover:bg-[#20202A] border-[#2C2C3A] text-slate-400 hover:text-white'
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Muscle Group Category Tabs (가슴, 등, 하체, 어깨, 팔, 코어) */}
+            <div className={`p-3 border-b flex items-center gap-1.5 overflow-x-auto scrollbar-none ${
+              isLight ? 'border-slate-100 bg-slate-50/30' : 'border-[#1E1E28] bg-[#0E0E14]'
+            }`}>
+              {[
+                { id: 'all', label: '전체' },
+                { id: 'chest', label: '가슴' },
+                { id: 'back', label: '등' },
+                { id: 'legs', label: '하체' },
+                { id: 'shoulders', label: '어깨' },
+                { id: 'arms', label: '팔' },
+                { id: 'core', label: '코어' },
+              ].map(cat => {
+                const isActive = selectedMuscleCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedMuscleCategory(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all flex-shrink-0 ${
+                      isActive
+                        ? isLight
+                          ? 'bg-lime-600 text-white shadow-sm'
+                          : 'bg-[#D4FF00] text-black shadow-sm shadow-[#D4FF00]/25'
+                        : isLight
+                        ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                        : 'bg-[#181822] border border-[#262634] text-slate-400 hover:text-white hover:border-[#383848]'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Bar */}
+            <div className="p-3 border-b border-inherit">
+              <input
+                type="text"
+                placeholder="종목명 또는 타겟 부위 검색 (예: 벤치, 스쿼트, 덤벨)..."
+                value={searchExerciseQuery}
+                onChange={(e) => setSearchExerciseQuery(e.target.value)}
+                className={`w-full px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border outline-none transition-all ${
+                  isLight
+                    ? 'bg-white border-slate-300 text-slate-900 focus:border-lime-500'
+                    : 'bg-[#0E0E14] border-[#262634] text-white focus:border-[#D4FF00]'
+                }`}
+              />
+            </div>
+
+            {/* Exercise List */}
+            <div className="p-3 overflow-y-auto max-h-[50vh] space-y-2">
+              {filteredLibraryExercises.length === 0 ? (
+                <div className="py-8 text-center text-xs text-slate-400">
+                  해당하는 운동 종목이 없습니다.
+                </div>
+              ) : (
+                filteredLibraryExercises.map((masterEx) => (
+                  <div
+                    key={masterEx.id}
+                    onClick={() => handleSelectLibraryExercise(masterEx)}
+                    className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                      isLight
+                        ? 'bg-white hover:bg-lime-50/60 border-slate-200 hover:border-lime-400'
+                        : 'bg-[#16161E] hover:bg-[#1C1C26] border-[#242432] hover:border-[#D4FF00]/50'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                          isLight ? 'bg-slate-100 text-slate-700' : 'bg-[#22222E] text-slate-300'
+                        }`}>
+                          {masterEx.targetMuscle}
+                        </span>
+                        <span className={`text-[10px] font-mono font-bold ${
+                          masterEx.intensity === 'High' ? 'text-amber-500' : 'text-slate-400'
+                        }`}>
+                          {masterEx.intensity} 강도
+                        </span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-black truncate">{masterEx.name}</h4>
+                      {masterEx.tip && (
+                        <p className={`text-[11px] truncate mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          💡 {masterEx.tip}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className={`text-right text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <div>{masterEx.defaultSets}세트 · {masterEx.defaultReps}</div>
+                        <div>휴식 {masterEx.defaultRestSeconds}초</div>
+                      </div>
+                      <button
+                        type="button"
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all ${
+                          isLight
+                            ? 'bg-lime-600 text-white border-lime-600 shadow-sm'
+                            : 'bg-[#D4FF00] text-black border-[#D4FF00] font-black'
+                        }`}
+                      >
+                        선택
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

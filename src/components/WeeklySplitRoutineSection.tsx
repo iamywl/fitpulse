@@ -134,14 +134,14 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className={`text-base sm:text-lg font-black tracking-tight truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <h2 className={`text-base sm:text-lg font-black tracking-tight whitespace-nowrap ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 주간 분할 루틴
               </h2>
               <span
-                className={`text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0 tracking-wider ${
+                className={`hidden sm:inline-block text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0 tracking-wider ${
                   isLight
-                    ? 'bg-[#D4FF00] text-[#09090B] border border-lime-400'
-                    : 'bg-[#CCFF00] text-[#09090B]'
+                    ? 'bg-lime-100 text-lime-800 border border-lime-300'
+                    : 'bg-[#D4FF00]/20 text-[#D4FF00] border border-[#D4FF00]/40'
                 }`}
               >
                 WEEKLY SPLIT
@@ -193,73 +193,90 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
         </div>
 
         {/* Horizontal Days Scroll / Grid with extra top padding so badge never clips */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 pt-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5 pt-3.5">
           {orderedSplitList.map((day) => {
             const isToday = day.dayIndex === currentDayIndex;
             const isSelected = day.dayIndex === selectedDayIndex;
+            // Short target muscle label for at-a-glance recognition
+            const primaryMuscle = day.isRestDay
+              ? '휴식'
+              : day.targetMuscles[0]
+              ? day.targetMuscles[0].replace(' (전체)', '').replace('대흉근', '가슴').replace('광배근', '등').replace('대퇴사두', '하체').replace('전면삼각근', '어깨').replace('측면삼각근', '어깨')
+              : day.title.split(' ')[0];
 
             return (
               <button
                 key={day.dayKey}
                 onClick={() => setSelectedDayIndex(day.dayIndex)}
-                className={`flex flex-col items-center justify-center py-2 px-0.5 rounded-2xl transition-all relative min-h-[60px] min-w-[36px] ${
+                className={`flex flex-col items-center justify-between py-2 px-1 rounded-2xl transition-all relative min-h-[76px] ${
                   isSelected
                     ? isLight
-                      ? 'bg-white border-2 border-lime-600 shadow-md shadow-lime-500/10'
-                      : 'bg-[#18181F] border-2 border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.25)]'
+                      ? 'bg-white border-2 border-lime-600 shadow-sm ring-2 ring-lime-500/20'
+                      : 'bg-[#18181F] border-2 border-[#D4FF00] shadow-[0_0_10px_rgba(212,255,0,0.2)]'
                     : isLight
                     ? 'bg-slate-50 border border-slate-200 hover:border-slate-300 hover:bg-slate-100'
-                    : 'bg-[#18181F]/60 border border-[#272732] hover:border-[#3F3F50] hover:bg-[#18181F]'
+                    : 'bg-[#14141A] border border-[#23232D] hover:border-[#383848] hover:bg-[#181822]'
                 }`}
               >
-                {/* Today Indicator Dot / Badge - properly positioned with no clipping */}
+                {/* Today Indicator Badge - with safe clearance */}
                 {isToday && (
                   <span
-                    className={`absolute -top-2.5 px-1.5 py-0.5 text-[8px] font-black rounded-full leading-tight shadow-sm ${
+                    className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-1.5 py-0.2 text-[8px] font-black rounded-full whitespace-nowrap shadow-sm ${
                       isLight
-                        ? 'bg-[#D4FF00] text-black border border-lime-400'
-                        : 'bg-[#CCFF00] text-[#09090B]'
+                        ? 'bg-lime-600 text-white'
+                        : 'bg-[#D4FF00] text-black'
                     }`}
                   >
                     TODAY
                   </span>
                 )}
 
-                <span
-                  className={`text-[10px] sm:text-xs font-mono font-bold tracking-wider ${
-                    isSelected
-                      ? isLight ? 'text-lime-700' : 'text-[#CCFF00]'
-                      : isToday
-                      ? isLight ? 'text-slate-900 font-black' : 'text-white'
-                      : isLight ? 'text-slate-500' : 'text-[#64748B]'
-                  }`}
-                >
-                  {day.englishShort}
-                </span>
+                {/* Day Header: Day of week */}
+                <div className="flex flex-col items-center leading-none">
+                  <span
+                    className={`text-[9px] sm:text-[10px] font-mono font-bold tracking-wider ${
+                      isSelected
+                        ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                        : isToday
+                        ? isLight ? 'text-slate-900 font-black' : 'text-white'
+                        : isLight ? 'text-slate-400' : 'text-slate-500'
+                    }`}
+                  >
+                    {day.englishShort}
+                  </span>
 
-                <span
-                  className={`text-xs sm:text-sm font-black mt-0.5 ${
-                    isSelected
-                      ? isLight ? 'text-slate-900' : 'text-white'
-                      : isToday
-                      ? isLight ? 'text-lime-700' : 'text-[#CCFF00]'
-                      : isLight ? 'text-slate-700' : 'text-[#94A3B8]'
-                  }`}
-                >
-                  {day.dayName}
-                </span>
+                  <span
+                    className={`text-xs sm:text-sm font-black mt-0.5 ${
+                      isSelected
+                        ? isLight ? 'text-slate-900' : 'text-white'
+                        : isToday
+                        ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                        : isLight ? 'text-slate-700' : 'text-slate-300'
+                    }`}
+                  >
+                    {day.dayName}
+                  </span>
+                </div>
 
-                {/* Bottom status chip */}
-                <div className="mt-1">
-                  {day.isRestDay ? (
-                    <span className={`w-1.5 h-1.5 rounded-full block ${isLight ? 'bg-slate-300' : 'bg-[#64748B]'}`} />
-                  ) : day.colorType === 'volt' ? (
-                    <span className={`w-1.5 h-1.5 rounded-full block ${isLight ? 'bg-lime-600' : 'bg-[#CCFF00] shadow-[0_0_4px_#CCFF00]'}`} />
-                  ) : day.colorType === 'crimson' ? (
-                    <span className={`w-1.5 h-1.5 rounded-full block ${isLight ? 'bg-red-500' : 'bg-[#FF334B] shadow-[0_0_4px_#FF334B]'}`} />
-                  ) : (
-                    <span className={`w-1.5 h-1.5 rounded-full block ${isLight ? 'bg-sky-500' : 'bg-[#00B4D8] shadow-[0_0_4px_#00B4D8]'}`} />
-                  )}
+                {/* Target Muscle Tag (한눈에 알 수 있는 부위 표시) */}
+                <div className="mt-1.5 w-full flex items-center justify-center">
+                  <span
+                    className={`text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded-md truncate max-w-full text-center leading-none ${
+                      day.isRestDay
+                        ? isLight
+                          ? 'bg-slate-200 text-slate-500'
+                          : 'bg-[#23232D] text-slate-400'
+                        : isSelected
+                        ? isLight
+                          ? 'bg-lime-100 text-lime-800 font-bold'
+                          : 'bg-[#D4FF00]/15 text-[#D4FF00] font-bold border border-[#D4FF00]/30'
+                        : isLight
+                        ? 'bg-slate-100 text-slate-600'
+                        : 'bg-[#1D1D26] text-slate-300 border border-[#272734]'
+                    }`}
+                  >
+                    {primaryMuscle}
+                  </span>
                 </div>
               </button>
             );
