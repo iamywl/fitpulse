@@ -131,6 +131,10 @@ erDiagram
 - **단일 세트 볼륨**: $\text{Volume} = \text{중량(kg)} \times \text{반복 수(reps)}$ (완료된 세트만 산입)
 - **세션 총 볼륨**: $\text{Total Session Volume} = \sum (\text{weight} \times \text{reps})$
 - **볼륨 증감율**: $\Delta \text{Volume (\%)} = \frac{V_{\text{curr}} - V_{\text{prev}}}{V_{\text{prev}}} \times 100$
+- **휴식 타이머 및 오디오 알림 (Web Audio API)**:
+  - 세트 완료 시 성공 딩동음(D5-A5) 재생 및 종목별 권장 휴식 타이머(90~120초) 자동 시작.
+  - 잔여 3초 전 카운트다운 틱(E5) 및 종료 시 3연타 비프음(A5-C6) 발림.
+  - 불필요한 설명 텍스트를 제거하고 숫자를 시원하게 읽을 수 있는 미니멀 HUD 인터페이스 유지.
 
 ### 6.2 1RM (Epley 공식)
 $$\text{1RM} \approx \text{Weight} \times \left(1 + \frac{\text{Reps}}{30}\right) \quad (\text{단, } \text{reps} \le 10 \text{ 권장})$$

@@ -105,15 +105,12 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
       {/* Header */}
       <div className={`flex ${isMobileView ? 'flex-col' : 'flex-col sm:flex-row sm:items-center'} justify-between gap-3 mb-5 relative z-10`}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <Zap className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
             <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              지난번 대비 총 볼륨 증감 비교
+              점진적 과부하 볼륨 분석
             </h2>
           </div>
-          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            점진적 과부하(Progressive Overload) 달성 여부를 직관적으로 검증합니다.
-          </p>
         </div>
 
         {/* Filter Toggle */}

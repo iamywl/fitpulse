@@ -133,15 +133,12 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
       {/* Header & Quick Insights */}
       <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'flex-col md:flex-row md:items-center md:justify-between'} gap-3 mb-4`}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <Calendar className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
             <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              운동 활동 히트맵 (잔디 심기)
+              운동 잔디 히트맵
             </h2>
           </div>
-          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            꾸준한 출석과 운동 볼륨 강도에 따라 잔디의 색상이 짙어집니다.
-          </p>
         </div>
 
         {/* Stats Row & Quick Today Action */}

@@ -10,12 +10,13 @@ import {
   Sparkles, 
   Zap, 
   Dumbbell, 
-  Info, 
   Play,
   RotateCcw
 } from 'lucide-react';
 
 import { ThemeMode } from '../theme/pantone';
+import { AudioAlertService } from '../services/sound/AudioAlertService';
+import { RestTimerModal } from './RestTimerModal';
 
 interface WeeklySplitRoutineSectionProps {
   onStartRoutine?: (splitDay: IWeeklySplitDay) => void;
@@ -55,12 +56,28 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
   const activeDay = splitList.find(d => d.dayIndex === selectedDayIndex) || splitList[0];
   const isTodayActive = activeDay.dayIndex === currentDayIndex;
 
-  // Toggle exercise completion
+  // Rest Timer State
+  const [isRestTimerOpen, setIsRestTimerOpen] = useState<boolean>(false);
+  const [timerSetNumber, setTimerSetNumber] = useState<number>(1);
+  const [timerExerciseName, setTimerExerciseName] = useState<string>('운동');
+  const [timerRestDuration, setTimerRestDuration] = useState<number>(90);
+
+  // Toggle exercise completion with Sound and Rest Timer Trigger
   const handleToggleExercise = (exerciseId: string) => {
+    const willComplete = !completedExercises[exerciseId];
     setCompletedExercises(prev => ({
       ...prev,
-      [exerciseId]: !prev[exerciseId],
+      [exerciseId]: willComplete,
     }));
+
+    if (willComplete) {
+      const targetEx = activeDay.exercises.find(e => e.id === exerciseId);
+      AudioAlertService.playSetComplete();
+      setTimerExerciseName(targetEx ? targetEx.name : '운동');
+      setTimerSetNumber(1);
+      setTimerRestDuration(targetEx?.restSeconds || 90);
+      setIsRestTimerOpen(true);
+    }
   };
 
   // Reset exercise completion
@@ -107,7 +124,7 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className={`text-base sm:text-lg font-black tracking-tight truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                주간 분할 루틴 플래너
+                주간 분할 루틴
               </h2>
               <span
                 className={`text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0 tracking-wider ${
@@ -119,9 +136,6 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                 WEEKLY SPLIT
               </span>
             </div>
-            <p className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
-              Apple & Nike Pro 규격 요일별 타겟 분할 및 점진적 과부하 설계
-            </p>
           </div>
         </div>
 
@@ -409,14 +423,6 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                         </span>
                       )}
                     </div>
-
-                    {/* Pro Tip */}
-                    {exercise.tip && (
-                      <p className={`text-[11px] mt-1 flex items-center gap-1.5 line-clamp-2 ${isLight ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
-                        <Info className={`w-3 h-3 flex-shrink-0 ${isLight ? 'text-sky-600' : 'text-[#00B4D8]'}`} />
-                        <span>{exercise.tip}</span>
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -493,6 +499,16 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           )}
         </div>
       </div>
+
+      {/* 휴식 타이머 모달 */}
+      <RestTimerModal
+        isOpen={isRestTimerOpen}
+        onClose={() => setIsRestTimerOpen(false)}
+        initialSeconds={timerRestDuration}
+        completedSetNumber={timerSetNumber}
+        exerciseName={timerExerciseName}
+        themeMode={themeMode}
+      />
     </div>
   );
 };

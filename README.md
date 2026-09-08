@@ -19,6 +19,9 @@ npm run build
 
 ## 🎬 UI 데모 및 화면 프리뷰 (Visual Tour & GIFs)
 
+### ⏱️ 1세트 완료 시 오디오 효과음 & 휴식 타이머 자동 팝업
+![FitPulse Rest Timer & Audio Alert](./docs/screenshots/fitpulse_rest_timer.gif)
+
 ### 🌓 다크 / 라이트 테마 원클릭 실시간 전환
 ![FitPulse Theme Toggle](./docs/screenshots/fitpulse_theme_toggle.gif)
 

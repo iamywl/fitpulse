@@ -51,15 +51,12 @@ export const InBodyRecommenderSection: React.FC<InBodyRecommenderSectionProps> =
       {/* Header */}
       <div className={`flex ${isMobileView ? 'flex-col gap-2.5' : 'flex-col sm:flex-row sm:items-center sm:justify-between'} gap-3 mb-5`}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <Scale className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
             <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              인바디 맞춤 중량 추천기
+              인바디 3대 맞춤 중량 추천
             </h2>
           </div>
-          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            체성분을 슬라이더로 조절하여 종목별 추천 1RM과 훈련 세트 중량을 실시간 확인하세요.
-          </p>
         </div>
 
         {/* Big 3 Total Badge */}

@@ -5,6 +5,8 @@ import { Plus, Trash2, Dumbbell, Sparkles, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 import { ThemeMode } from '../theme/pantone';
+import { AudioAlertService } from '../services/sound/AudioAlertService';
+import { RestTimerModal } from './RestTimerModal';
 
 interface ExerciseSetManagerProps {
   workouts: WorkoutSession[];
@@ -51,6 +53,13 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
     { id: 'set-4', setNumber: 4, weight: 80, reps: 5, completed: true },
   ]);
 
+  // Rest Timer Modal state
+  const queryParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialTimerOpen = queryParams?.get('timer') === 'true';
+  const [isRestTimerOpen, setIsRestTimerOpen] = useState<boolean>(initialTimerOpen);
+  const [completedSetForTimer, setCompletedSetForTimer] = useState<number>(1);
+  const [restSecondsDuration, setRestSecondsDuration] = useState<number>(90);
+
   const currentExercise = EXERCISE_OPTIONS.find(e => e.id === selectedExId) || EXERCISE_OPTIONS[0];
 
   const exerciseVolume = sets.reduce((sum, s) => s.completed ? sum + s.weight * s.reps : sum, 0);
@@ -92,10 +101,22 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
   };
 
   const handleToggleComplete = (setId: string) => {
+    const targetSet = sets.find(s => s.id === setId);
+    const willBeCompleted = targetSet ? !targetSet.completed : false;
+
     setSets(prev => prev.map(s => {
       if (s.id !== setId) return s;
-      return { ...s, completed: !s.completed };
+      return { ...s, completed: willBeCompleted };
     }));
+
+    // 세트 완료 시: 경쾌한 성공 효과음 재생 & 휴식 타이머 자동 팝업
+    if (willBeCompleted && targetSet) {
+      AudioAlertService.playSetComplete();
+      setCompletedSetForTimer(targetSet.setNumber);
+      // 다관절 복합운동은 90초~120초, 기본 90초 휴식 권장
+      setRestSecondsDuration(currentExercise.category === 'legs' || currentExercise.category === 'back' ? 120 : 90);
+      setIsRestTimerOpen(true);
+    }
   };
 
   const handleSaveToToday = () => {
@@ -151,15 +172,12 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
       {/* Header */}
       <div className={`flex ${isMobileView ? 'flex-col gap-2.5' : 'flex-col sm:flex-row sm:items-center sm:justify-between'} mb-4`}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <Dumbbell className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
             <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              종목별 세트 & 반복수(Reps) 간편 기록
+              세트 기입 및 타이머
             </h2>
           </div>
-          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            종목별로 무게(kg)와 반복횟수를 직접 입력하고 즉시 잔디와 볼륨에 반영합니다.
-          </p>
         </div>
 
         {/* Exercise Selector */}
@@ -414,6 +432,16 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
           <span>오늘 운동 기록에 즉시 저장</span>
         </button>
       </div>
+
+      {/* 1세트 완료 시 자동 호출되는 휴식 타이머 모달 */}
+      <RestTimerModal
+        isOpen={isRestTimerOpen}
+        onClose={() => setIsRestTimerOpen(false)}
+        initialSeconds={restSecondsDuration}
+        completedSetNumber={completedSetForTimer}
+        exerciseName={currentExercise.name}
+        themeMode={themeMode}
+      />
     </div>
   );
 };

@@ -123,15 +123,12 @@ export const ExerciseAnalyticsSection: React.FC<ExerciseAnalyticsSectionProps> =
       {/* Header & Exercise Selector */}
       <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'flex-col sm:flex-row sm:items-center sm:justify-between'} gap-3 mb-5`}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <Activity className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
             <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              운동 종목별 성장 & 1RM 분석
+              종목별 성장 & 1RM 분석
             </h2>
           </div>
-          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            종목별 추정 1RM과 세션별 누적 볼륨의 성장을 시각적으로 추적합니다.
-          </p>
         </div>
 
         {/* Dropdown Selector */}
