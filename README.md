@@ -17,6 +17,24 @@ npm run build
 
 ---
 
+## 🎬 UI 데모 및 화면 프리뷰 (Visual Tour & GIFs)
+
+### 🌓 다크 / 라이트 테마 원클릭 실시간 전환
+![FitPulse Theme Toggle](./docs/screenshots/fitpulse_theme_toggle.gif)
+
+### 📱 핵심 기능 순환 둘러보기 (주간 루틴 · 세트 기입 · 잔디 히트맵 · 인바디 추천기 · 일지 모달)
+![FitPulse Feature Demo Tour](./docs/screenshots/fitpulse_demo_tour.gif)
+
+| 모바일 시뮬레이터 (390px) | 데스크톱 와이드 뷰 |
+| :---: | :---: |
+| <img src="./docs/screenshots/01_mobile_simulator_dark.png" width="320"/> | <img src="./docs/screenshots/03_desktop_wide_dark.png" width="480"/> |
+
+| 원터치 퀵 세트 기입기 | 인바디 맞춤 중량 추천기 |
+| :---: | :---: |
+| <img src="./docs/screenshots/05_exercise_sets_tab.png" width="320"/> | <img src="./docs/screenshots/07_inbody_recommender_tab.png" width="480"/> |
+
+---
+
 ## 📚 에이전트 및 아키텍처 문서
 - **마스터 에이전트 지침서**: [`AGENTS.md`](./AGENTS.md) - 에이전트 운영 프로토콜, SOLID 객체지향 표준, 팬톤 2288 C 규격, 도메인 공식
 - **자동 탑재 규칙**: [`.agents/rules/fitpulse_rules.md`](./.agents/rules/fitpulse_rules.md) - Antigravity 시스템 상시 로드 룰

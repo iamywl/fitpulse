@@ -29,17 +29,20 @@ export function App() {
     return storageService.getItem<IInBodyData>(STORAGE_INBODY_KEY, INITIAL_INBODY_DATA);
   });
 
-  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
-    return storageService.getItem<ThemeMode>(STORAGE_THEME_KEY, 'dark');
-  });
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialTheme = (queryParams.get('theme') as ThemeMode) || storageService.getItem<ThemeMode>(STORAGE_THEME_KEY, 'dark');
+  const initialView = (queryParams.get('view') as 'mobile' | 'desktop') || 'mobile';
+  const initialTab = (queryParams.get('tab') as any) || 'all';
+  const initialModal = queryParams.get('modal') === 'log';
 
-  const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(initialTheme);
+  const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>(initialView);
 
   // Modals & Navigation State
-  const [isLogModalOpen, setIsLogModalOpen] = useState<boolean>(false);
+  const [isLogModalOpen, setIsLogModalOpen] = useState<boolean>(initialModal);
   const [selectedWorkoutDetail, setSelectedWorkoutDetail] = useState<WorkoutSession | null>(null);
   const [presetForWorkout, setPresetForWorkout] = useState<IRecommendedWeight | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'split' | 'sets' | 'heatmap' | 'volume' | 'analytics' | 'inbody'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'split' | 'sets' | 'heatmap' | 'volume' | 'analytics' | 'inbody'>(initialTab);
   const [routineExerciseOverride, setRoutineExerciseOverride] = useState<any>(null);
 
   const isLight = themeMode === 'light';
