@@ -1,7 +1,11 @@
 import { DayOfWeek, IWeeklyRoutineDay, IWeeklyRoutinePlan } from '../../models/routine';
+import { IWeeklySplitDay } from '../../models/fitness';
+import { DEFAULT_WEEKLY_SPLIT } from '../../data/splitRoutineData';
+import { ROUTINE_PRESETS, RoutinePresetType } from '../../data/routinePresets';
 import { storageService } from '../storage/LocalStorageService';
 
 const STORAGE_ROUTINE_KEY = 'FITPULSE_WEEKLY_ROUTINE';
+export const STORAGE_CUSTOM_SPLIT_KEY = 'FITPULSE_CUSTOM_WEEKLY_SPLIT';
 
 export const DEFAULT_WEEKLY_PLAN: IWeeklyRoutinePlan = {
   id: 'default-4-split',
@@ -103,6 +107,41 @@ export const DEFAULT_WEEKLY_PLAN: IWeeklyRoutinePlan = {
 };
 
 export class RoutineService {
+  /**
+   * 커스텀 주간 분할 루틴 목록 조회 (IWeeklySplitDay[])
+   * LocalStorage에 저장된 사용자 정의 루틴이 있으면 반환하고, 없으면 기본 4분할 반환
+   */
+  static getWeeklySplit(): IWeeklySplitDay[] {
+    return storageService.getItem<IWeeklySplitDay[]>(STORAGE_CUSTOM_SPLIT_KEY, DEFAULT_WEEKLY_SPLIT);
+  }
+
+  /**
+   * 커스텀 주간 분할 루틴 저장
+   */
+  static saveWeeklySplit(splitList: IWeeklySplitDay[]): void {
+    storageService.setItem(STORAGE_CUSTOM_SPLIT_KEY, splitList);
+  }
+
+  /**
+   * 특정 프리셋으로 루틴 리셋 및 반환
+   */
+  static resetToPreset(presetId: RoutinePresetType): IWeeklySplitDay[] {
+    const preset = ROUTINE_PRESETS.find(p => p.id === presetId);
+    const splitDays = preset ? preset.splitDays : DEFAULT_WEEKLY_SPLIT;
+    this.saveWeeklySplit(splitDays);
+    return splitDays;
+  }
+
+  /**
+   * 오늘 요일에 해당하는 루틴 분할 반환
+   */
+  static getTodaySplitDay(customSplit?: IWeeklySplitDay[]): IWeeklySplitDay {
+    const splitList = customSplit || this.getWeeklySplit();
+    const currentDayIndex = new Date().getDay(); // 0: Sun, 1: Mon, ...
+    return splitList.find(d => d.dayIndex === currentDayIndex) || splitList[1] || DEFAULT_WEEKLY_SPLIT[1];
+  }
+
+  // 레거시 모델 호환
   static getWeeklyPlan(): IWeeklyRoutinePlan {
     return storageService.getItem<IWeeklyRoutinePlan>(STORAGE_ROUTINE_KEY, DEFAULT_WEEKLY_PLAN);
   }
@@ -112,7 +151,7 @@ export class RoutineService {
   }
 
   static getTodayDayOfWeek(): DayOfWeek {
-    const dayIndex = new Date().getDay(); // 0(일) ~ 6(토)
+    const dayIndex = new Date().getDay();
     const map: Record<number, DayOfWeek> = {
       0: 'sun',
       1: 'mon',

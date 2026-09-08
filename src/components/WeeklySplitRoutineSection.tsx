@@ -17,11 +17,15 @@ import {
 import { ThemeMode } from '../theme/pantone';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
+import { RoutineBuilderModal } from './RoutineBuilderModal';
+import { SlidersHorizontal } from 'lucide-react';
 
 interface WeeklySplitRoutineSectionProps {
   onStartRoutine?: (splitDay: IWeeklySplitDay) => void;
   onSelectRoutineExercise?: (exerciseId: string, exerciseName: string, category: any, targetWeight: number, targetReps: number) => void;
   onQuickLog?: () => void;
+  splitList?: IWeeklySplitDay[];
+  onUpdateSplit?: (updatedSplit: IWeeklySplitDay[]) => void;
   isMobileView?: boolean;
   themeMode?: ThemeMode;
 }
@@ -30,6 +34,8 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
   onStartRoutine,
   onSelectRoutineExercise,
   onQuickLog,
+  splitList: propSplitList,
+  onUpdateSplit,
   isMobileView = false,
   themeMode = 'dark',
 }) => {
@@ -43,8 +49,13 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
   // Completed exercise toggle state in current session
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
 
-  // Active routine split list
-  const [splitList] = useState<IWeeklySplitDay[]>(DEFAULT_WEEKLY_SPLIT);
+  // Active routine split list from prop or default
+  const splitList = propSplitList || DEFAULT_WEEKLY_SPLIT;
+
+  // Routine Builder Modal State
+  const queryParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialBuilderOpen = queryParams?.get('builder') === 'true';
+  const [isBuilderOpen, setIsBuilderOpen] = useState<boolean>(initialBuilderOpen);
 
   // Re-order to Monday first: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
   const orderedSplitList = [
@@ -139,20 +150,34 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           </div>
         </div>
 
-        {/* Action button */}
-        {onQuickLog && (
+        {/* Action buttons: Routine Builder & Quick Log */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
-            onClick={onQuickLog}
-            className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition-all flex-shrink-0 min-h-[38px] ${
+            onClick={() => setIsBuilderOpen(true)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition-all min-h-[38px] ${
               isLight
-                ? 'bg-lime-50 text-lime-800 border-lime-300 hover:bg-lime-100'
-                : 'bg-[#18181F] text-[#CCFF00] border-[#CCFF00]/30 hover:bg-[#CCFF00]/10'
+                ? 'bg-lime-600 hover:bg-lime-700 text-white border-lime-500 shadow-sm'
+                : 'bg-[#D4FF00] hover:bg-[#CCFF00] text-black font-black shadow-[0_0_12px_rgba(212,255,0,0.3)]'
             }`}
           >
-            <Zap className={`w-3.5 h-3.5 ${isLight ? 'fill-lime-600 text-lime-600' : 'fill-[#CCFF00] text-[#CCFF00]'}`} />
-            <span>오늘 완료</span>
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span className="whitespace-nowrap">루틴 만들기</span>
           </button>
-        )}
+
+          {onQuickLog && (
+            <button
+              onClick={onQuickLog}
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition-all min-h-[38px] ${
+                isLight
+                  ? 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
+                  : 'bg-[#18181F] text-[#CCFF00] border-[#CCFF00]/30 hover:bg-[#CCFF00]/10'
+              }`}
+            >
+              <Zap className={`w-3.5 h-3.5 ${isLight ? 'fill-lime-600 text-lime-600' : 'fill-[#CCFF00] text-[#CCFF00]'}`} />
+              <span>오늘 완료</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 7-Day Apple/Whoop Style Horizontal Strip Selector */}
@@ -507,6 +532,19 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
         initialSeconds={timerRestDuration}
         completedSetNumber={timerSetNumber}
         exerciseName={timerExerciseName}
+        themeMode={themeMode}
+      />
+
+      {/* 루틴 빌더 모달 */}
+      <RoutineBuilderModal
+        isOpen={isBuilderOpen}
+        onClose={() => setIsBuilderOpen(false)}
+        currentSplit={splitList}
+        onSaveSplit={(newSplit) => {
+          if (onUpdateSplit) {
+            onUpdateSplit(newSplit);
+          }
+        }}
         themeMode={themeMode}
       />
     </div>

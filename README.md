@@ -27,6 +27,16 @@ npm run build
 
 ---
 
+### 🛠️ 나만의 분할 루틴 설계: 루틴 빌더 (Routine Builder)
+
+> 추천 프리셋(4분할 · 3분할 PPL · 2분할 상하체 · 5분할 보디빌딩)을 원클릭으로 불러오거나, 요일별 운동/휴식일 지정, 종목 라이브러리 추가, 세트수 및 휴식시간을 자유롭게 커스텀할 수 있습니다.
+
+| 추천 프리셋 선택 (Presets) | 요일별 직접 커스텀 (Custom Editor) |
+| :---: | :---: |
+| <img src="./docs/screenshots/14_routine_builder_presets.png" width="360"/> | <img src="./docs/screenshots/15_routine_builder_custom.png" width="360"/> |
+
+---
+
 ## ⏱️ 핵심 인터랙션 데모 (Visual Tour & GIFs)
 
 ### ⏱️ 1세트 완료 시 오디오 효과음 & 휴식 타이머 자동 팝업

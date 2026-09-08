@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { WorkoutSession, IExerciseLog, IExerciseSet, IWeeklySplitDay, IWeeklySplitExercise } from '../models/fitness';
 import { DEFAULT_WEEKLY_SPLIT } from '../data/splitRoutineData';
 import { VolumeService } from '../services/calculator/VolumeService';
@@ -18,6 +18,8 @@ import confetti from 'canvas-confetti';
 interface TodayWorkoutHeroSectionProps {
   workouts: WorkoutSession[];
   onSaveWorkoutSession: (session: WorkoutSession) => void;
+  splitList?: IWeeklySplitDay[];
+  onUpdateSplit?: (updatedSplit: IWeeklySplitDay[]) => void;
   isMobileView?: boolean;
   themeMode?: ThemeMode;
   onNavigateTab?: (tab: string) => void;
@@ -26,6 +28,7 @@ interface TodayWorkoutHeroSectionProps {
 export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = ({
   workouts,
   onSaveWorkoutSession,
+  splitList = DEFAULT_WEEKLY_SPLIT,
   isMobileView = false,
   themeMode = 'dark',
   onNavigateTab,
@@ -36,8 +39,8 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
 
   // Today's Routine from Split Routine Data
   const todaySplitDay: IWeeklySplitDay = useMemo(() => {
-    return DEFAULT_WEEKLY_SPLIT.find(d => d.dayIndex === currentDayIndex) || DEFAULT_WEEKLY_SPLIT[1];
-  }, [currentDayIndex]);
+    return splitList.find(d => d.dayIndex === currentDayIndex) || splitList[1] || DEFAULT_WEEKLY_SPLIT[1];
+  }, [splitList, currentDayIndex]);
 
   // Check if today already has a saved workout session
   const todayWorkoutSession = useMemo(() => {
@@ -73,6 +76,40 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
     });
     return map;
   });
+
+  // Keep exerciseSetsMap in sync whenever todaySplitDay changes (e.g. from Routine Builder)
+  useEffect(() => {
+    setExerciseSetsMap(prev => {
+      const nextMap = { ...prev };
+      todaySplitDay.exercises.forEach(ex => {
+        if (!nextMap[ex.id] || nextMap[ex.id].length === 0) {
+          const loggedEx = todayWorkoutSession?.exercises.find(e => e.exerciseId === ex.id || e.exerciseName === ex.name);
+          if (loggedEx && loggedEx.sets.length > 0) {
+            nextMap[ex.id] = loggedEx.sets;
+          } else {
+            const defaultWeight = ex.name.includes('데드리프트') ? 100 :
+                                  ex.name.includes('스쿼트') ? 90 :
+                                  ex.name.includes('벤치프레스') ? 70 :
+                                  ex.name.includes('프레스') ? 50 : 40;
+            nextMap[ex.id] = Array.from({ length: ex.sets }, (_, i) => ({
+              id: `set-${ex.id}-${i + 1}`,
+              setNumber: i + 1,
+              weight: defaultWeight + (i > 0 ? (i * 2.5) : 0),
+              reps: parseInt(ex.reps) || 8,
+              completed: false,
+              isWarmup: i === 0,
+            }));
+          }
+        }
+      });
+      return nextMap;
+    });
+
+    // Reset active index if out of range
+    if (activeExerciseIndex >= todaySplitDay.exercises.length) {
+      setActiveExerciseIndex(0);
+    }
+  }, [todaySplitDay, todayWorkoutSession]);
 
   // Rest Timer State
   const [isRestTimerOpen, setIsRestTimerOpen] = useState<boolean>(false);

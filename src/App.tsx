@@ -13,6 +13,7 @@ import { TodayWorkoutHeroSection } from './components/TodayWorkoutHeroSection';
 import { WorkoutLogModal } from './components/WorkoutLogModal';
 import { WorkoutDetailModal } from './components/WorkoutDetailModal';
 import { ThemeMode } from './theme/pantone';
+import { RoutineService } from './services/routine/RoutineService';
 import { Zap, CalendarDays, TrendingUp, Scale, Wifi, Battery } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -27,6 +28,11 @@ export function App() {
 
   const [inbodyData, setInbodyData] = useState<IInBodyData>(() => {
     return storageService.getItem<IInBodyData>(STORAGE_INBODY_KEY, INITIAL_INBODY_DATA);
+  });
+
+  // Custom Weekly Split Routine state
+  const [weeklySplit, setWeeklySplit] = useState<IWeeklySplitDay[]>(() => {
+    return RoutineService.getWeeklySplit();
   });
 
   const queryParams = new URLSearchParams(window.location.search);
@@ -76,6 +82,11 @@ export function App() {
   useEffect(() => {
     storageService.setItem(STORAGE_INBODY_KEY, inbodyData);
   }, [inbodyData]);
+
+  const handleSaveWeeklySplit = (updatedSplit: IWeeklySplitDay[]) => {
+    setWeeklySplit(updatedSplit);
+    RoutineService.saveWeeklySplit(updatedSplit);
+  };
 
   const streak = VolumeService.calculateStreak(workouts);
 
@@ -273,6 +284,8 @@ export function App() {
           <TodayWorkoutHeroSection
             workouts={workouts}
             onSaveWorkoutSession={handleSaveWorkout}
+            splitList={weeklySplit}
+            onUpdateSplit={handleSaveWeeklySplit}
             isMobileView={isMobile}
             themeMode={themeMode}
             onNavigateTab={(tab) => setActiveTab(tab as any)}
@@ -284,6 +297,8 @@ export function App() {
       {activeTab === 'split' && (
         <section>
           <WeeklySplitRoutineSection
+            splitList={weeklySplit}
+            onUpdateSplit={handleSaveWeeklySplit}
             onStartRoutine={handleStartRoutine}
             onSelectRoutineExercise={handleSelectRoutineExercise}
             onQuickLog={handleQuickSimulateToday}
