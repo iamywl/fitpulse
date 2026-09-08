@@ -36,6 +36,7 @@ npm run build
 ---
 
 ## 📚 에이전트 및 아키텍처 문서
+- **엔티티 관계 다이어그램(ERD)**: [`docs/ERD.md`](./docs/ERD.md) - RDBMS 및 클라이언트 스키마, Mermaid 관계도, 외래키/인덱스 명세
 - **마스터 에이전트 지침서**: [`AGENTS.md`](./AGENTS.md) - 에이전트 운영 프로토콜, SOLID 객체지향 표준, 팬톤 2288 C 규격, 도메인 공식
 - **자동 탑재 규칙**: [`.agents/rules/fitpulse_rules.md`](./.agents/rules/fitpulse_rules.md) - Antigravity 시스템 상시 로드 룰
 - **서비스 기능명세서**: [`docs/SPECIFICATION.md`](./docs/SPECIFICATION.md) - v1.2.0 기능 명세 및 유저 저니

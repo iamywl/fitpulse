@@ -84,7 +84,29 @@
 
 ---
 
-## 5. 전담 서브에이전트 역할 및 운영 프로토콜
+## 5. 엔티티 관계 다이어그램 및 데이터 모델 (ERD Specification)
+
+본 프로젝트는 확장 가능한 관계형/문서형 데이터베이스 설계를 위해 [`docs/ERD.md`](./docs/ERD.md)에 상세 스키마 및 관계를 정의하고 있습니다.
+
+```mermaid
+erDiagram
+    USERS ||--o{ WORKOUT_SESSIONS : "1:N"
+    USERS ||--o{ INBODY_RECORDS : "1:N"
+    USERS ||--o{ USER_ROUTINE_PLANS : "1:N"
+    WORKOUT_SESSIONS ||--|{ EXERCISE_LOGS : "1:N (CASCADE)"
+    EXERCISE_LOGS ||--|{ EXERCISE_SETS : "1:N (CASCADE)"
+    EXERCISES ||--o{ EXERCISE_LOGS : "1:N (Metadata)"
+    EXERCISES ||--o{ ROUTINE_EXERCISES : "1:N (Metadata)"
+    USER_ROUTINE_PLANS ||--|{ ROUTINE_DAYS : "1:7 (Weekly Strip)"
+    ROUTINE_DAYS ||--o{ ROUTINE_EXERCISES : "1:N (Split Target)"
+```
+- **주요 엔티티**: `USERS`, `WORKOUT_SESSIONS`, `EXERCISE_LOGS`, `EXERCISE_SETS`, `EXERCISES`, `INBODY_RECORDS`, `USER_ROUTINE_PLANS`, `ROUTINE_DAYS`, `ROUTINE_EXERCISES`.
+- **연쇄 무결성 (Referential Integrity)**: 운동 세션 삭제 시 소속된 종목 및 세트 자동 CASCADE 삭제.
+- **인덱스 설계**: `(user_id, session_date DESC)` 복합 인덱스로 16주 잔디 히트맵과 직전 세션 대비 점진적 과부하 볼륨 연산을 $O(\log N)$ 최적화.
+
+---
+
+## 6. 전담 서브에이전트 역할 및 운영 프로토콜
 
 본 프로젝트는 전문화된 서브에이전트 시스템을 기반으로 운영됩니다:
 
