@@ -5,15 +5,15 @@ import { VolumeService } from './services/calculator/VolumeService';
 import { storageService } from './services/storage/LocalStorageService';
 import { Header } from './components/Header';
 import { WeeklySplitRoutineSection } from './components/WeeklySplitRoutineSection';
-import { ExerciseSetManager } from './components/ExerciseSetManager';
 import { HeatmapSection } from './components/HeatmapSection';
 import { VolumeProgressionSection } from './components/VolumeProgressionSection';
 import { ExerciseAnalyticsSection } from './components/ExerciseAnalyticsSection';
 import { InBodyRecommenderSection } from './components/InBodyRecommenderSection';
+import { TodayWorkoutHeroSection } from './components/TodayWorkoutHeroSection';
 import { WorkoutLogModal } from './components/WorkoutLogModal';
 import { WorkoutDetailModal } from './components/WorkoutDetailModal';
 import { ThemeMode } from './theme/pantone';
-import { LayoutDashboard, CalendarDays, Dumbbell, Calendar, TrendingUp, Activity, Scale, Wifi, Battery } from 'lucide-react';
+import { Zap, CalendarDays, TrendingUp, Scale, Wifi, Battery } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const STORAGE_WORKOUTS_KEY = 'FITPULSE_WORKOUTS';
@@ -32,18 +32,23 @@ export function App() {
   const queryParams = new URLSearchParams(window.location.search);
   const initialTheme = (queryParams.get('theme') as ThemeMode) || storageService.getItem<ThemeMode>(STORAGE_THEME_KEY, 'dark');
   const initialView = (queryParams.get('view') as 'mobile' | 'desktop') || 'mobile';
-  const initialTab = (queryParams.get('tab') as any) || 'all';
+  // Map legacy URL params to 4 core tabs
+  const rawTab = queryParams.get('tab');
+  const initialTab: 'today' | 'split' | 'analytics' | 'inbody' = 
+    rawTab === 'split' ? 'split' :
+    (rawTab === 'analytics' || rawTab === 'heatmap' || rawTab === 'volume') ? 'analytics' :
+    rawTab === 'inbody' ? 'inbody' : 'today';
+
   const initialModal = queryParams.get('modal') === 'log';
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(initialTheme);
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>(initialView);
 
-  // Modals & Navigation State
+  // Modals & Navigation State: 'today' is the Primary Default View
   const [isLogModalOpen, setIsLogModalOpen] = useState<boolean>(initialModal);
   const [selectedWorkoutDetail, setSelectedWorkoutDetail] = useState<WorkoutSession | null>(null);
   const [presetForWorkout, setPresetForWorkout] = useState<IRecommendedWeight | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'split' | 'sets' | 'heatmap' | 'volume' | 'analytics' | 'inbody'>(initialTab);
-  const [routineExerciseOverride, setRoutineExerciseOverride] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'today' | 'split' | 'analytics' | 'inbody'>(initialTab);
 
   const isLight = themeMode === 'light';
 
@@ -109,20 +114,13 @@ export function App() {
   };
 
   const handleSelectRoutineExercise = (
-    exerciseId: string,
-    exerciseName: string,
-    category: any,
-    targetWeight: number,
-    targetReps: number
+    _exerciseId: string,
+    _exerciseName: string,
+    _category: any,
+    _targetWeight: number,
+    _targetReps: number
   ) => {
-    setRoutineExerciseOverride({
-      exerciseId,
-      exerciseName,
-      category,
-      targetWeight,
-      targetReps,
-    });
-    setActiveTab('sets');
+    setActiveTab('today');
   };
 
   // 요일별 분할 루틴 적용하여 오늘 운동 세션 생성
@@ -162,7 +160,7 @@ export function App() {
       sum + e.sets.reduce((sSum: number, s: any) => sSum + s.weight * s.reps, 0), 0
     );
     handleSaveWorkout(newSession);
-    setActiveTab('sets');
+    setActiveTab('today');
   };
 
   // 원클릭 오늘 운동 시뮬레이션
@@ -208,105 +206,82 @@ export function App() {
   // Render dashboard sections
   const renderContentSections = () => (
     <div className="space-y-4">
-      {/* Navigation Tabs */}
-      <div className={`flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b transition-colors ${
+      {/* 4 Core Navigation Tabs */}
+      <div className={`grid grid-cols-4 gap-1.5 pb-1 border-b transition-colors ${
         isLight ? 'border-slate-200' : 'border-[#272732]'
       }`}>
         <button
-          onClick={() => setActiveTab('all')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeTab === 'all'
-              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+          onClick={() => setActiveTab('today')}
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all ${
+            activeTab === 'today'
+              ? 'bg-[#D4FF00] text-black shadow-md shadow-[#D4FF00]/25'
               : isLight
               ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
-          <LayoutDashboard className="w-3.5 h-3.5" />
-          <span>전체 보기</span>
+          <Zap className="w-4 h-4 fill-current" />
+          <span>오늘 운동</span>
         </button>
+
         <button
           onClick={() => setActiveTab('split')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all ${
             activeTab === 'split'
-              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              ? 'bg-[#D4FF00] text-black shadow-md shadow-[#D4FF00]/25'
               : isLight
               ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
-          <CalendarDays className="w-3.5 h-3.5" />
-          <span>요일별 분할</span>
+          <CalendarDays className="w-4 h-4" />
+          <span>주간 분할</span>
         </button>
-        <button
-          onClick={() => setActiveTab('sets')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeTab === 'sets'
-              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
-              : isLight
-              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
-          }`}
-        >
-          <Dumbbell className="w-3.5 h-3.5" />
-          <span>종목 세트 기입</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('heatmap')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeTab === 'heatmap'
-              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
-              : isLight
-              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          <span>잔디 히트맵</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('volume')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            activeTab === 'volume'
-              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
-              : isLight
-              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
-          }`}
-        >
-          <TrendingUp className="w-3.5 h-3.5" />
-          <span>볼륨 비교</span>
-        </button>
+
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all ${
             activeTab === 'analytics'
-              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              ? 'bg-[#D4FF00] text-black shadow-md shadow-[#D4FF00]/25'
               : isLight
               ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
-          <Activity className="w-3.5 h-3.5" />
-          <span>종목 성장 차트</span>
+          <TrendingUp className="w-4 h-4" />
+          <span>성장 분석</span>
         </button>
+
         <button
           onClick={() => setActiveTab('inbody')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-2xl text-xs sm:text-sm font-black transition-all ${
             activeTab === 'inbody'
-              ? 'bg-[#D4FF00] text-black font-black shadow-md shadow-[#D4FF00]/20'
+              ? 'bg-[#D4FF00] text-black shadow-md shadow-[#D4FF00]/25'
               : isLight
               ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               : 'text-[#94A3B8] hover:text-white hover:bg-[#18181F]'
           }`}
         >
-          <Scale className="w-3.5 h-3.5" />
-          <span>인바디 추천</span>
+          <Scale className="w-4 h-4" />
+          <span>인바디</span>
         </button>
       </div>
 
-      {/* 0. Weekly Split Routine Section */}
-      {(activeTab === 'all' || activeTab === 'split') && (
+      {/* 1. PRIMARY DEFAULT VIEW: Today's Active Workout Hero HUD */}
+      {activeTab === 'today' && (
+        <section>
+          <TodayWorkoutHeroSection
+            workouts={workouts}
+            onSaveWorkoutSession={handleSaveWorkout}
+            isMobileView={isMobile}
+            themeMode={themeMode}
+            onNavigateTab={(tab) => setActiveTab(tab as any)}
+          />
+        </section>
+      )}
+
+      {/* 2. Weekly Split Routine Section */}
+      {activeTab === 'split' && (
         <section>
           <WeeklySplitRoutineSection
             onStartRoutine={handleStartRoutine}
@@ -318,56 +293,39 @@ export function App() {
         </section>
       )}
 
-      {/* 1. Exercise Set Manager */}
-      {(activeTab === 'all' || activeTab === 'sets') && (
-        <section>
-          <ExerciseSetManager
-            workouts={workouts}
-            onSaveExerciseSets={handleSaveWorkout}
-            isMobileView={isMobile}
-            themeMode={themeMode}
-            selectedExerciseOverride={routineExerciseOverride}
-          />
-        </section>
+      {/* 3. Growth & Overload Analytics (Integrated View: Heatmap + Volume + 1RM) */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-4">
+          <section>
+            <HeatmapSection
+              workouts={workouts}
+              onSelectWorkout={(w) => setSelectedWorkoutDetail(w)}
+              onQuickLogToday={handleQuickSimulateToday}
+              isMobileView={isMobile}
+              themeMode={themeMode}
+            />
+          </section>
+
+          <section>
+            <VolumeProgressionSection
+              workouts={workouts}
+              isMobileView={isMobile}
+              themeMode={themeMode}
+            />
+          </section>
+
+          <section>
+            <ExerciseAnalyticsSection
+              workouts={workouts}
+              isMobileView={isMobile}
+              themeMode={themeMode}
+            />
+          </section>
+        </div>
       )}
 
-      {/* 2. GitHub Activity Heatmap */}
-      {(activeTab === 'all' || activeTab === 'heatmap') && (
-        <section>
-          <HeatmapSection
-            workouts={workouts}
-            onSelectWorkout={(w) => setSelectedWorkoutDetail(w)}
-            onQuickLogToday={handleQuickSimulateToday}
-            isMobileView={isMobile}
-            themeMode={themeMode}
-          />
-        </section>
-      )}
-
-      {/* 3. Volume Progression Comparison */}
-      {(activeTab === 'all' || activeTab === 'volume') && (
-        <section>
-          <VolumeProgressionSection
-            workouts={workouts}
-            isMobileView={isMobile}
-            themeMode={themeMode}
-          />
-        </section>
-      )}
-
-      {/* 4. Exercise Analytics */}
-      {(activeTab === 'all' || activeTab === 'analytics') && (
-        <section>
-          <ExerciseAnalyticsSection
-            workouts={workouts}
-            isMobileView={isMobile}
-            themeMode={themeMode}
-          />
-        </section>
-      )}
-
-      {/* 5. InBody Recommender */}
-      {(activeTab === 'all' || activeTab === 'inbody') && (
+      {/* 4. InBody Recommender */}
+      {activeTab === 'inbody' && (
         <section>
           <InBodyRecommenderSection
             inbodyData={inbodyData}
@@ -438,57 +396,49 @@ export function App() {
               {renderContentSections()}
             </div>
 
-            {/* Mobile Bottom Navigation Bar */}
-            <div className={`mt-2 pt-2 border-t flex justify-around items-center rounded-b-[40px] py-1 transition-colors ${
+            {/* Mobile Bottom Navigation Bar (4 Core Tabs) */}
+            <div className={`mt-2 pt-2 border-t grid grid-cols-4 items-center rounded-b-[40px] py-1 transition-colors ${
               isLight ? 'bg-white border-slate-200' : 'bg-[#0A0A0E] border-[#1F1F28]'
             }`}>
               <button
+                onClick={() => setActiveTab('today')}
+                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-black py-1.5 transition-all min-h-[44px] ${
+                  activeTab === 'today'
+                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
+                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-[#94A3B8] hover:text-white'
+                }`}
+              >
+                <Zap className="w-4 h-4 fill-current" />
+                <span>오늘운동</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('split')}
-                className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
+                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-black py-1.5 transition-all min-h-[44px] ${
                   activeTab === 'split'
                     ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
                     : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-[#94A3B8] hover:text-white'
                 }`}
               >
                 <CalendarDays className="w-4 h-4" />
-                <span>분할루틴</span>
+                <span>주간분할</span>
               </button>
+
               <button
-                onClick={() => setActiveTab('sets')}
-                className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'sets'
-                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
-                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Dumbbell className="w-4 h-4" />
-                <span>세트기입</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('heatmap')}
-                className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'heatmap'
-                    ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
-                    : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Calendar className="w-4 h-4" />
-                <span>잔디</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('volume')}
-                className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
-                  activeTab === 'volume'
+                onClick={() => setActiveTab('analytics')}
+                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-black py-1.5 transition-all min-h-[44px] ${
+                  activeTab === 'analytics'
                     ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
                     : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <TrendingUp className="w-4 h-4" />
-                <span>볼륨</span>
+                <span>성장분석</span>
               </button>
+
               <button
                 onClick={() => setActiveTab('inbody')}
-                className={`flex flex-col items-center gap-0.5 text-[10px] font-black py-1 px-1.5 transition-all ${
+                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-black py-1.5 transition-all min-h-[44px] ${
                   activeTab === 'inbody'
                     ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
                     : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'

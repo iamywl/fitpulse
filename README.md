@@ -17,7 +17,17 @@ npm run build
 
 ---
 
-## 🎬 UI 데모 및 화면 프리뷰 (Visual Tour & GIFs)
+## 🎬 사용자 중심 첫 화면: 오늘 워크아웃 HUD (Today's Active Workout Hero)
+
+> 헬스장에 입장한 사용자가 앱을 켜자마자 **0-Click으로 당일 요일 루틴과 첫 번째 운동 종목의 세트 기입기가 즉각 나타나는** 싱글 포커스 HUD 레이아웃입니다.
+
+| 메인 첫 화면: 다크 테마 (Nike Volt) | 메인 첫 화면: 라이트 테마 (Clean Studio White) |
+| :---: | :---: |
+| <img src="./docs/screenshots/11_today_hud_main.png" width="340"/> | <img src="./docs/screenshots/12_today_hud_light.png" width="340"/> |
+
+---
+
+## ⏱️ 핵심 인터랙션 데모 (Visual Tour & GIFs)
 
 ### ⏱️ 1세트 완료 시 오디오 효과음 & 휴식 타이머 자동 팝업
 ![FitPulse Rest Timer & Audio Alert](./docs/screenshots/fitpulse_rest_timer.gif)
@@ -25,16 +35,8 @@ npm run build
 ### 🌓 다크 / 라이트 테마 원클릭 실시간 전환
 ![FitPulse Theme Toggle](./docs/screenshots/fitpulse_theme_toggle.gif)
 
-### 📱 핵심 기능 순환 둘러보기 (주간 루틴 · 세트 기입 · 잔디 히트맵 · 인바디 추천기 · 일지 모달)
+### 📱 핵심 4대 여정 (오늘 운동 · 주간 분할 · 성장 분석 · 인바디 추천기)
 ![FitPulse Feature Demo Tour](./docs/screenshots/fitpulse_demo_tour.gif)
-
-| 모바일 시뮬레이터 (390px) | 데스크톱 와이드 뷰 |
-| :---: | :---: |
-| <img src="./docs/screenshots/01_mobile_simulator_dark.png" width="320"/> | <img src="./docs/screenshots/03_desktop_wide_dark.png" width="480"/> |
-
-| 원터치 퀵 세트 기입기 | 인바디 맞춤 중량 추천기 |
-| :---: | :---: |
-| <img src="./docs/screenshots/05_exercise_sets_tab.png" width="320"/> | <img src="./docs/screenshots/07_inbody_recommender_tab.png" width="480"/> |
 
 ---
 
