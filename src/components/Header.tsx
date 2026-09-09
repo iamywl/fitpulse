@@ -7,23 +7,27 @@ interface HeaderProps {
   currentStreak: number;
   viewMode: 'mobile' | 'desktop';
   themeMode: 'dark' | 'light';
+  isSampleMode: boolean;
   onToggleViewMode: (mode: 'mobile' | 'desktop') => void;
   onToggleTheme: () => void;
   onOpenLogModal: () => void;
-  onResetMockData: () => void;
-  onClearData: () => void;
-  onQuickSimulateToday: () => void;
+  onSetSampleData: () => void;
+  onSetEmptyData: () => void;
+  onResetMockData?: () => void;
+  onClearData?: () => void;
+  onQuickSimulateToday?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentStreak,
   viewMode,
   themeMode,
+  isSampleMode,
   onToggleViewMode,
   onToggleTheme,
   onOpenLogModal,
-  onResetMockData,
-  onClearData,
+  onSetSampleData,
+  onSetEmptyData,
 }) => {
   const isDark = themeMode === 'dark';
 
@@ -122,32 +126,43 @@ export const Header: React.FC<HeaderProps> = ({
             <strong className="font-mono-num">{currentStreak}</strong>일째 연속
           </TdsBadge>
 
-          {/* Sample Mock Data load */}
-          <button
-            onClick={onResetMockData}
-            title="샘플 데이터 채우기"
-            className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-              isDark
-                ? 'bg-[#1C1C1E] text-[#B0B8C1] hover:text-white border border-[#2C2C2E]'
-                : 'bg-white text-[#4E5968] hover:text-[#191F28] border border-slate-200 shadow-sm'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#3182F6]" />
-            <span>샘플</span>
-          </button>
-
-          {/* Reset button */}
-          <button
-            onClick={onClearData}
-            title="기록 초기화"
-            className={`hidden md:flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold transition-all ${
-              isDark
-                ? 'text-[#8B95A1] hover:text-[#F87171]'
-                : 'text-[#8B95A1] hover:text-[#C92A38]'
-            }`}
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+          {/* Data State Segmented Switcher: [샘플 데이터] | [신규(빈 상태)] */}
+          <div className={`flex items-center p-0.5 rounded-xl border transition-colors ${
+            isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-[#E5E8EB]/80 border-slate-200'
+          }`}>
+            <button
+              type="button"
+              onClick={onSetSampleData}
+              title="16주 샘플 운동 데이터 불러오기"
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                isSampleMode
+                  ? 'bg-[#3182F6] text-white shadow-sm font-black'
+                  : isDark
+                  ? 'text-[#8B95A1] hover:text-white'
+                  : 'text-[#6B7684] hover:text-[#191F28]'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>샘플</span>
+            </button>
+            <button
+              type="button"
+              onClick={onSetEmptyData}
+              title="기록 0개 신규 유저 상태로 초기화"
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                !isSampleMode
+                  ? isDark
+                    ? 'bg-[#2C2D33] text-white shadow-sm font-black'
+                    : 'bg-white text-[#191F28] shadow-sm font-black'
+                  : isDark
+                  ? 'text-[#8B95A1] hover:text-white'
+                  : 'text-[#6B7684] hover:text-[#191F28]'
+              }`}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>신규(빈 상태)</span>
+            </button>
+          </div>
 
           {/* New Workout CTA */}
           <TdsButton

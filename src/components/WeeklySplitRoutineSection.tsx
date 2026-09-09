@@ -397,10 +397,10 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
       </div>
 
       {/* Bottom CTA */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
+      <div className={`flex ${isMobileView ? 'flex-col' : 'flex-col sm:flex-row'} items-center justify-between gap-3 pt-4`}>
         <div className={`text-xs flex items-center gap-1.5 w-full sm:w-auto ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
-          <Dumbbell className="w-4 h-4 text-[#3182F6]" />
-          <span>
+          <Dumbbell className="w-4 h-4 text-[#3182F6] flex-shrink-0" />
+          <span className="break-keep">
             {isTodayActive ? '오늘 추천 운동을 바로 시작할 수 있어요.' : '원하는 요일을 눌러 루틴을 미리 살펴보세요.'}
           </span>
         </div>
@@ -409,6 +409,7 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           <TdsButton
             size="medium"
             variant="primary"
+            fullWidth={isMobileView}
             isDark={isDark}
             onClick={() => onStartRoutine(activeDay)}
             leftIcon={<Play className="w-4 h-4 fill-white" />}

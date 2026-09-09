@@ -470,7 +470,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
 
       {/* Prominent TDS Celebration Summary Card when completed */}
       {isTodayCompleted && (
-        <div className={`p-5 sm:p-6 rounded-3xl border text-center transition-all ${
+        <div className={`p-5 rounded-3xl border text-center transition-all ${
           isDark
             ? 'bg-gradient-to-b from-[#1C2838] to-[#1C1C1E] border-[#3182F6]/30 text-white'
             : 'bg-gradient-to-b from-[#EBF3FE] to-white border-[#3182F6]/25 shadow-sm text-[#191F28]'
@@ -478,61 +478,77 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
           <div className="w-12 h-12 rounded-2xl bg-[#00C73C] text-white flex items-center justify-center mx-auto mb-3 shadow-md">
             <CheckCircle2 className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+          <h2 className="text-xl font-black tracking-tight whitespace-nowrap">
             오늘 운동 완주를 축하해요! 👏
           </h2>
-          <p className={`text-xs sm:text-sm mt-1 max-w-sm mx-auto break-keep ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
+          <p className={`text-xs mt-1.5 max-w-sm mx-auto break-keep leading-relaxed ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
             오늘의 노력이 잔디 히트맵에 안전하게 쌓였어요. 점진적 과부하 성장 리포트를 확인해 보세요.
           </p>
 
-          {/* 4 Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5 mb-5 text-left">
+          {/* 4 Metrics Grid: In Mobile View, STRICTLY 2x2 grid with ample space */}
+          <div className={`grid ${isMobileView ? 'grid-cols-2 gap-2.5' : 'grid-cols-2 sm:grid-cols-4 gap-3'} mt-5 mb-5 text-left`}>
+            {/* 1. 총 볼륨 */}
             <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
-              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>들어 올린 볼륨</span>
-              <div className="text-lg font-black text-[#3182F6] font-mono-num mt-0.5">
-                {Math.round(finalVolume).toLocaleString()} <span className="text-xs font-normal text-[#6B7684]">kg</span>
+              <span className={`text-xs font-bold whitespace-nowrap block ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                총 볼륨
+              </span>
+              <div className="text-xl font-black text-[#3182F6] font-mono-num mt-1 whitespace-nowrap flex items-baseline gap-1">
+                <span>{Math.round(finalVolume).toLocaleString()}</span>
+                <span className="text-xs font-semibold text-[#6B7684]">kg</span>
               </div>
             </div>
 
+            {/* 2. 완주 종목 */}
             <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
-              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>완주 종목</span>
-              <div className="text-lg font-black font-mono-num mt-0.5">
-                {finalCompletedExercises} <span className="text-xs font-normal text-[#6B7684]">종목</span>
+              <span className={`text-xs font-bold whitespace-nowrap block ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                완주 종목
+              </span>
+              <div className="text-xl font-black font-mono-num mt-1 whitespace-nowrap flex items-baseline gap-1">
+                <span>{finalCompletedExercises}</span>
+                <span className="text-xs font-semibold text-[#6B7684]">개 종목</span>
               </div>
             </div>
 
+            {/* 3. 완료 세트 */}
             <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
-              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>완료 세트</span>
-              <div className="text-lg font-black text-[#00C73C] font-mono-num mt-0.5">
-                {finalCompletedSets} <span className="text-xs font-normal text-[#6B7684]">세트</span>
+              <span className={`text-xs font-bold whitespace-nowrap block ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                완료 세트
+              </span>
+              <div className="text-xl font-black text-[#00C73C] font-mono-num mt-1 whitespace-nowrap flex items-baseline gap-1">
+                <span>{finalCompletedSets}</span>
+                <span className="text-xs font-semibold text-[#6B7684]">세트</span>
               </div>
             </div>
 
+            {/* 4. 운동 시간 */}
             <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
-              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>예상 소요 시간</span>
-              <div className="text-lg font-black font-mono-num mt-0.5">
-                약 {todayWorkoutSession?.durationMinutes || todaySplitDay.estimatedMinutes} <span className="text-xs font-normal text-[#6B7684]">분</span>
+              <span className={`text-xs font-bold whitespace-nowrap block ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                운동 시간
+              </span>
+              <div className="text-xl font-black font-mono-num mt-1 whitespace-nowrap flex items-baseline gap-1">
+                <span>약 {todayWorkoutSession?.durationMinutes || todaySplitDay.estimatedMinutes}</span>
+                <span className="text-xs font-semibold text-[#6B7684]">분</span>
               </div>
             </div>
           </div>
 
-          {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+          {/* Action CTAs: In Mobile View, STRICTLY vertical stack with full width */}
+          <div className={`flex ${isMobileView ? 'flex-col' : 'flex-col sm:flex-row'} items-stretch justify-center gap-2.5 w-full`}>
             {onNavigateTab && (
               <TdsButton
                 size="medium"
                 variant="primary"
-                fullWidth={isMobileView}
+                fullWidth
                 onClick={() => onNavigateTab('analytics')}
                 leftIcon={<Sparkles className="w-4 h-4" />}
               >
-                성장 분석(잔디 히트맵) 확인하기
+                성장 분석 보러가기
               </TdsButton>
             )}
             <TdsButton
               size="medium"
               variant="secondary"
-              fullWidth={isMobileView}
+              fullWidth
               isDark={isDark}
               onClick={() => setIsEditingAfterComplete(true)}
             >

@@ -107,19 +107,17 @@ export function App() {
     setWorkouts(prev => prev.filter(w => w.id !== workoutId));
   };
 
-  const handleResetMockData = () => {
-    if (window.confirm('1개월치 시연용 샘플 운동 데이터로 새로고침하시겠습니까?')) {
-      const mock = generateMockWorkouts();
-      setWorkouts(mock);
-      setInbodyData(INITIAL_INBODY_DATA);
-    }
+  const handleSetSampleData = () => {
+    const mock = generateMockWorkouts();
+    setWorkouts(mock);
+    setInbodyData(INITIAL_INBODY_DATA);
   };
 
-  const handleClearData = () => {
-    if (window.confirm('정말로 모든 운동 기록을 초기화하시겠습니까?')) {
-      setWorkouts([]);
-    }
+  const handleSetEmptyData = () => {
+    setWorkouts([]);
   };
+
+  const handleResetMockData = handleSetSampleData;
 
   const handleApplyRecommendationToWorkout = (rec: IRecommendedWeight) => {
     setPresetForWorkout(rec);
@@ -321,14 +319,17 @@ export function App() {
         currentStreak={streak.currentStreak}
         viewMode={viewMode}
         themeMode={themeMode}
+        isSampleMode={workouts.length > 0}
         onToggleViewMode={setViewMode}
         onToggleTheme={handleToggleTheme}
         onOpenLogModal={() => {
           setPresetForWorkout(null);
           setIsLogModalOpen(true);
         }}
-        onResetMockData={handleResetMockData}
-        onClearData={handleClearData}
+        onSetSampleData={handleSetSampleData}
+        onSetEmptyData={handleSetEmptyData}
+        onResetMockData={handleSetSampleData}
+        onClearData={handleSetEmptyData}
         onQuickSimulateToday={handleQuickSimulateToday}
       />
 
