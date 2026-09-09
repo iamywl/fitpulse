@@ -39,6 +39,137 @@ function createFitPulseSurveyDirectly() {
 }
 
 /**
+ * [편의 기능 1] 기존에 생성된 설문지 및 스프레드시트 링크를 바로 확인하고 싶을 때 실행
+ */
+function checkLatestSurveyLinks() {
+  const userProps = PropertiesService.getUserProperties();
+  let formId = userProps.getProperty('lastFormId');
+  let editUrl = userProps.getProperty('lastEditUrl');
+  let publishedUrl = userProps.getProperty('lastPublishedUrl');
+  let sheetUrl = userProps.getProperty('lastSheetUrl');
+
+  if (!formId) {
+    const files = DriveApp.searchFiles("title contains 'FitPulse' and mimeType = 'application/vnd.google-apps.form'");
+    if (files.hasNext()) {
+      const file = files.next();
+      formId = file.getId();
+      const form = FormApp.openById(formId);
+      editUrl = form.getEditUrl();
+      publishedUrl = form.getPublishedUrl();
+    }
+  }
+
+  Logger.log("==================================================================");
+  Logger.log("📋 [FitPulse 설문지 및 응답 시트 링크 확인]");
+  Logger.log("------------------------------------------------------------------");
+  Logger.log("✏️ [관리자용] 구글 폼 편집 & 통계 URL:\n" + (editUrl ? editUrl + "#responses" : "폼을 먼저 생성해주세요"));
+  Logger.log("🔗 [응답자용] 설문 참여 URL:\n" + (publishedUrl || "폼을 먼저 생성해주세요"));
+  Logger.log("📊 [실시간 응답] 구글 스프레드시트 URL:\n" + (sheetUrl || "구글 드라이브에서 확인해주세요"));
+  Logger.log("==================================================================");
+}
+
+/**
+ * [편의 기능 2] 설문 결과 통계 화면을 미리 체크할 수 있도록 5개의 가상 사용자 테스트 응답을 자동 생성
+ */
+function generateSampleSurveyResponses() {
+  Logger.log("🚀 가상 테스터 5명의 현실적인 설문 응답을 생성하여 구글 폼에 자동 제출합니다...");
+
+  const userProps = PropertiesService.getUserProperties();
+  let formId = userProps.getProperty('lastFormId');
+
+  if (!formId) {
+    const files = DriveApp.searchFiles("title contains 'FitPulse' and mimeType = 'application/vnd.google-apps.form'");
+    if (files.hasNext()) {
+      formId = files.next().getId();
+    }
+  }
+
+  if (!formId) {
+    Logger.log("❌ 먼저 'createFitPulseSurveyDirectly'를 실행하여 설문지를 생성해주세요!");
+    return;
+  }
+
+  const form = FormApp.openById(formId);
+  const items = form.getItems();
+
+  const personas = [
+    { name: "3분할 직장인 리프터", exp: 2, freq: 1, designScore: 5, oneHandScore: 5, overloadScore: 5, sus: 5, nps: 10, comment: "토스 블루 색상이 헬스장에서 눈 안 아프고 최고예요. 퀵 중량 칩이랑 쉬는시간 추천 진짜 편합니다." },
+    { name: "헬스 3개월차 초보자", exp: 0, freq: 0, designScore: 5, oneHandScore: 4, overloadScore: 4, sus: 4, nps: 9, comment: "인바디 추천 중량 덕분에 웜업 무게 고민 없이 바로 운동 시작할 수 있어서 너무 좋아요!" },
+    { name: "5년차 보디빌딩 매니아", exp: 3, freq: 2, designScore: 4, oneHandScore: 5, overloadScore: 5, sus: 4, nps: 9, comment: "지난번 세션 볼륨이랑 비교해주는 게 진짜 자극됩니다. 다음 세트 추천 기능 대박이네요." },
+    { name: "크로스핏 & 프리웨이트 유저", exp: 2, freq: 2, designScore: 5, oneHandScore: 5, overloadScore: 4, sus: 5, nps: 10, comment: "휴식 타이머 비프음 소리 덕분에 딴짓 안 하고 세트 바로바로 들어갈 수 있어서 운동 시간 줄었습니다." },
+    { name: "오운완 인증 라이프스타일러", exp: 1, freq: 1, designScore: 5, oneHandScore: 5, overloadScore: 5, sus: 5, nps: 10, comment: "16주 잔디 히트맵 채우는 맛에 매일 헬스장 출석 도장 찍고 있습니다. 정식 출시 꼭 해주세요!" }
+  ];
+
+  let submittedCount = 0;
+
+  personas.forEach((p, idx) => {
+    try {
+      const response = form.createResponse();
+      items.forEach(item => {
+        const itemType = item.getType();
+        const title = item.getTitle();
+
+        if (itemType === FormApp.ItemType.MULTIPLE_CHOICE) {
+          const mcItem = item.asMultipleChoiceItem();
+          const choices = mcItem.getChoices();
+          if (choices.length > 0) {
+            let choiceIndex = 0;
+            if (title.indexOf("경력") !== -1) choiceIndex = p.exp % choices.length;
+            else if (title.indexOf("방문") !== -1) choiceIndex = p.freq % choices.length;
+            else choiceIndex = Math.floor(Math.random() * choices.length);
+            response.withItemResponse(mcItem.createResponse(choices[choiceIndex].getValue()));
+          }
+        } else if (itemType === FormApp.ItemType.SCALE) {
+          const scaleItem = item.asScaleItem();
+          let score = p.designScore;
+          if (title.indexOf("NPS") !== -1 || title.indexOf("추천") !== -1) {
+            score = p.nps;
+          } else if (title.indexOf("역코딩") !== -1 || title.indexOf("복잡") !== -1 || title.indexOf("번거") !== -1) {
+            score = 1;
+          } else if (title.indexOf("SUS") !== -1) {
+            score = p.sus;
+          } else if (title.indexOf("한 손") !== -1 || title.indexOf("조작") !== -1) {
+            score = p.oneHandScore;
+          } else if (title.indexOf("과부하") !== -1 || title.indexOf("볼륨") !== -1) {
+            score = p.overloadScore;
+          }
+          const min = scaleItem.getLowerBound();
+          const max = scaleItem.getUpperBound();
+          const boundedScore = Math.max(min, Math.min(max, score));
+          response.withItemResponse(scaleItem.createResponse(boundedScore));
+        } else if (itemType === FormApp.ItemType.CHECKBOX) {
+          const cbItem = item.asCheckboxItem();
+          const choices = cbItem.getChoices();
+          if (choices.length > 0) {
+            const selected = [choices[0].getValue()];
+            choices.forEach(c => {
+              if (c.getValue().indexOf("RPE") !== -1) selected.push(c.getValue());
+            });
+            response.withItemResponse(cbItem.createResponse(selected));
+          }
+        } else if (itemType === FormApp.ItemType.TEXT || itemType === FormApp.ItemType.PARAGRAPH_TEXT) {
+          if (title.indexOf("이메일") === -1) {
+            const textItem = itemType === FormApp.ItemType.TEXT ? item.asTextItem() : item.asParagraphTextItem();
+            response.withItemResponse(textItem.createResponse(p.comment));
+          }
+        }
+      });
+
+      response.submit();
+      submittedCount++;
+      Logger.log("✅ [" + (idx + 1) + "/5] " + p.name + " 님의 가상 응답이 정상 제출되었습니다.");
+    } catch (err) {
+      Logger.log("⚠️ 응답 제출 안내 (" + p.name + "): " + err.toString());
+    }
+  });
+
+  Logger.log("==================================================================");
+  Logger.log("🎉 총 " + submittedCount + "건의 테스트 응답 제출이 완료되었습니다!");
+  Logger.log("📊 구글 폼 통계 확인 URL:\n" + form.getEditUrl() + "#responses");
+  Logger.log("==================================================================");
+}
+
+/**
  * [방법 2] 외부 HTTP POST 요청을 받아 동적으로 생성하는 Web App 엔드포인트
  */
 function doPost(e) {
@@ -156,7 +287,7 @@ function buildGoogleFormAndSpreadsheet(payload) {
     Logger.log("⚠️ 대시보드 탭 생성 안내: " + dashErr.toString());
   }
 
-  return {
+  const resultData = {
     status: "success",
     formId: form.getId(),
     editUrl: form.getEditUrl(),
@@ -164,6 +295,21 @@ function buildGoogleFormAndSpreadsheet(payload) {
     sheetId: spreadsheet.getId(),
     sheetUrl: spreadsheet.getUrl()
   };
+
+  // 다음 번 조회나 테스트 응답 삽입을 위해 스크립트 속성에 자동 보관
+  try {
+    const userProps = PropertiesService.getUserProperties();
+    userProps.setProperties({
+      lastFormId: resultData.formId,
+      lastEditUrl: resultData.editUrl,
+      lastPublishedUrl: resultData.publishedUrl,
+      lastSheetUrl: resultData.sheetUrl
+    });
+  } catch (e) {
+    Logger.log("속성 저장 참고: " + e.toString());
+  }
+
+  return resultData;
 }
 
 /**
