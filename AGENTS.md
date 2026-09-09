@@ -136,3 +136,14 @@ $$\text{1RM} \approx \text{Weight} \times \left(1 + \frac{\text{Reps}}{30}\right
 3. 모든 UI/UX 컴포넌트는 모바일 시뮬레이터(390px)와 데스크톱 양쪽 모두에서 찌그러짐(Anti-Squish) 없이 완벽히 동작해야 한다.
 4. 코드 수정 후에는 반드시 `npm run build`를 통과하여 타입 에러가 0건임을 보장해야 한다.
 5. Docker 환경(Dockerfile, docker-compose.yml)은 macOS(Apple Silicon/Intel)와 Windows 양쪽에서 언제든 원클릭으로 구동 가능해야 한다.
+
+---
+
+## 7. Git 브랜치 전략 및 배포 운영 원칙 (Branching & Deployment Policy)
+- **`develop` 브랜치 (Active Development & Dialogue)**:
+  - 사용자와의 모든 일상적인 대화, 피처 개발, 버그 수정, 리팩토링은 반드시 **`develop` 브랜치**에서 진행한다.
+  - 작업 완료 시 커밋 및 푸시는 기본적으로 `develop` 브랜치를 대상으로 수행한다.
+- **`main` 브랜치 (Production / Deployment Only)**:
+  - `main` 브랜치는 Netlify 실서비스 배포와 연동된 배포 전용 브랜치이다.
+  - **사용자가 명시적으로 "배포해줘", "배포를 위해 머지해줘"라고 명령할 때만** `develop` 브랜치를 `main` 브랜치에 머지하고 푸시한다.
+  - 사용자의 명시적인 배포 요청 없이는 절대로 `main` 브랜치에 직접 작업하거나 머지/푸시하지 않는다.
