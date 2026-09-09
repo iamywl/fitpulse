@@ -6,44 +6,40 @@
  * [주요 기능]
  * 1. 📋 구글 폼 자동 생성 (24개 문항, 6개 섹션, 1~5점 척도, SUS 10문항, NPS 0~10점)
  * 2. 📊 실시간 응답 구글 스프레드시트 자동 생성 및 폼 연결 (form.setDestination)
- * 3. 📈 실시간 응답 대시보드(SUS 점수 환산 및 NPS 분석) 시트 자동 템플릿 구성
- * 4. 🔗 관리자 편집 URL, 응답자 제출 URL, 실시간 구글 시트 URL 원클릭 반환
+ * 3. 📈 실시간 응답 대시보드(SUS 점수 환산 및 NPS 분석) 시트 자동 구성
+ * 4. 🔗 관리자 편집 URL, 응답자 제출 URL, 실시간 구글 시트 URL 반환
  * 
- * [사용 방법 1: 가장 간편한 원클릭 직접 실행 (추천)]
- * 1. https://script.google.com 에 접속하여 [새 프로젝트] 생성
- * 2. 본 스크립트 전체를 코드 편집기(Code.gs)에 붙여넣기
- * 3. 상단 함수 선택 드롭다운에서 `createFitPulseSurveyDirectly` 선택 후 [실행] 클릭
- * 4. 권한 승인(Google 계정 허용) 1회 진행
- * 5. 실행 로그에 출력되는 [구글 폼 URL] 및 [구글 시트 URL] 확인!
- * 
- * [사용 방법 2: 웹앱(Web App) doPost REST API 방식]
- * 1. 본 코드를 붙여넣고 우측 상단 [배포] -> [새 배포] 클릭
- * 2. 유형: "웹 앱", 액세스 권한: "모든 사용자(Anyone)"로 배포
- * 3. 발급된 웹 앱 URL로 JSON payload를 POST 전송
+ * [실행 시 필수 확인 사항 - 최초 1회 권한 승인]
+ * - [실행] 클릭 후 멈춰있거나 스피너가 계속 돌면:
+ *   1) [중지] 클릭 후 브라우저 새로고침(F5)
+ *   2) [실행] 클릭 시 나타나는 "승인이 필요합니다" 팝업에서 [권한 검토] 클릭
+ *   3) 계정 선택 -> 좌측 하단 [고급] -> [Healthcare(으)로 이동(안전하지 않음)] -> [허용]
  * ==============================================================================
  */
 
 /**
- * 방법 1: Google Apps Script 콘솔에서 원클릭으로 폼과 시트를 동시 생성 및 연결하는 함수
+ * [방법 1] Google Apps Script 콘솔에서 버튼 하나로 바로 생성 (추천)
  */
 function createFitPulseSurveyDirectly() {
+  Logger.log("🚀 [1/4] FitPulse 설문지 생성 프로세스를 시작합니다...");
+  
   const payload = getFitPulseSurveyPayload();
   const result = buildGoogleFormAndSpreadsheet(payload);
   
   Logger.log("==================================================================");
-  Logger.log("🎉 FitPulse 설문지 및 실시간 응답 시트가 성공적으로 생성되었습니다!");
+  Logger.log("🎉 [완료] FitPulse 설문지 및 실시간 응답 시트가 성공적으로 생성되었습니다!");
   Logger.log("------------------------------------------------------------------");
   Logger.log("📌 폼 ID: " + result.formId);
-  Logger.log("✏️ 관리자 폼 편집 URL: " + result.editUrl);
-  Logger.log("🔗 응답자 설문 제출 URL: " + result.publishedUrl);
-  Logger.log("📊 실시간 응답 스프레드시트 URL: " + result.sheetUrl);
+  Logger.log("✏️ [관리자용] 구글 폼 편집 URL:\n" + result.editUrl);
+  Logger.log("🔗 [응답자용] 설문 제출 URL:\n" + result.publishedUrl);
+  Logger.log("📊 [실시간 응답] 구글 스프레드시트 URL:\n" + result.sheetUrl);
   Logger.log("==================================================================");
   
   return result;
 }
 
 /**
- * 방법 2: 외부 HTTP POST 요청을 받아 동적으로 폼과 시트를 생성 및 연결하는 Web App 엔드포인트
+ * [방법 2] 외부 HTTP POST 요청을 받아 동적으로 생성하는 Web App 엔드포인트
  */
 function doPost(e) {
   try {
@@ -60,7 +56,7 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
-    Logger.log("Error in doPost: " + err.toString());
+    Logger.log("❌ 오류 발생: " + err.toString());
     return ContentService.createTextOutput(JSON.stringify({
       status: "error",
       message: err.toString()
@@ -69,62 +65,61 @@ function doPost(e) {
 }
 
 /**
- * 공통 엔진: 구글 폼 생성 -> 질문 항목 추가 -> 응답 구글 시트 생성 및 연결 -> 대시보드 탭 구성
+ * 공통 폼 & 스프레드시트 빌더 엔진
  */
 function buildGoogleFormAndSpreadsheet(payload) {
   // 1. 폼 생성 및 기본 메타데이터 설정
   const title = payload.title || "FitPulse(핏펄스) 사용자 경험(UX) 및 제품 만족도 설문지";
+  Logger.log("📋 [2/4] 구글 폼 생성 중: " + title);
   const form = FormApp.create(title);
 
   if (payload.description) {
     form.setDescription(payload.description);
   }
-
-  // 기본 설정: 진행률 표시줄 표시
   form.setProgressBar(true);
   form.setIsQuiz(false);
 
-  // 2. 질문 파싱 및 항목 추가
+  // 2. 질문 파싱 및 항목 추가 (초고속 setChoiceValues 사용)
   if (Array.isArray(payload.questions)) {
+    Logger.log("📝 [3/4] " + payload.questions.length + "개 설문 항목을 폼에 구성 중...");
+    
     payload.questions.forEach((q) => {
       let item;
 
       switch (q.type) {
-        case "PAGE_BREAK": // 페이지 섹션 분할
+        case "PAGE_BREAK":
           item = form.addPageBreakItem();
           break;
 
-        case "SECTION_HEADER": // 섹션 헤더
+        case "SECTION_HEADER":
           item = form.addSectionHeaderItem();
           break;
 
-        case "TEXT": // 단답형
+        case "TEXT":
           item = form.addTextItem();
           break;
 
-        case "PARAGRAPH": // 장문형
+        case "PARAGRAPH":
           item = form.addParagraphTextItem();
           break;
 
-        case "CHOICE": // 객관식 (단일 선택 라디오)
+        case "CHOICE":
           item = form.addMultipleChoiceItem();
           if (Array.isArray(q.choices)) {
-            const choices = q.choices.map((c) => item.createChoice(c));
-            item.setChoices(choices);
+            item.setChoiceValues(q.choices);
           }
           if (q.hasOtherOption) item.showOtherOption(true);
           break;
 
-        case "CHECKBOX": // 체크박스 (복수 선택)
+        case "CHECKBOX":
           item = form.addCheckboxItem();
           if (Array.isArray(q.choices)) {
-            const choices = q.choices.map((c) => item.createChoice(c));
-            item.setChoices(choices);
+            item.setChoiceValues(q.choices);
           }
           if (q.hasOtherOption) item.showOtherOption(true);
           break;
 
-        case "SCALE": // 선형 배율 (1~5점 또는 NPS 0~10점)
+        case "SCALE":
           item = form.addScaleItem();
           const min = q.min !== undefined ? q.min : 1;
           const max = q.max !== undefined ? q.max : 5;
@@ -146,144 +141,76 @@ function buildGoogleFormAndSpreadsheet(payload) {
     });
   }
 
-  // 3. 응답을 실시간으로 저장할 새 구글 스프레드시트 생성
-  const sheetTitle = (payload.title || "FitPulse 설문지") + " (응답 및 분석)";
+  // 3. 응답 저장용 새 구글 스프레드시트 생성 및 폼 연결
+  Logger.log("📊 [4/4] 실시간 응답 구글 스프레드시트 생성 및 폼 연결 중...");
+  const sheetTitle = title + " (응답 및 분석)";
   const spreadsheet = SpreadsheetApp.create(sheetTitle);
 
-  // 4. 폼과 구글 스프레드시트 공식 연결 (사용자가 응답 제출 시 자동 기록됨)
+  // 폼과 스프레드시트 공식 연동
   form.setDestination(FormApp.DestinationType.SPREADSHEET, spreadsheet.getId());
 
-  // 5. 응답 시트에 토스 스타일의 '실시간 분석 대시보드' 탭 자동 구축
+  // 대시보드 안내 탭 구성
   try {
     setupAnalysisDashboard(spreadsheet);
-  } catch (dashboardErr) {
-    Logger.log("대시보드 탭 생성 중 비필수 경고 (무시 가능): " + dashboardErr.toString());
+  } catch (dashErr) {
+    Logger.log("⚠️ 대시보드 탭 생성 안내: " + dashErr.toString());
   }
 
-  // 6. 생성된 폼 및 시트의 모든 URL 반환
   return {
     status: "success",
     formId: form.getId(),
-    editUrl: form.getEditUrl(),              // 관리자 폼 편집용 URL
-    publishedUrl: form.getPublishedUrl(),     // 응답자 설문 제출용 URL
-    sheetId: spreadsheet.getId(),            // 구글 시트 ID
-    sheetUrl: spreadsheet.getUrl()           // 실시간 응답 및 대시보드 스프레드시트 URL
+    editUrl: form.getEditUrl(),
+    publishedUrl: form.getPublishedUrl(),
+    sheetId: spreadsheet.getId(),
+    sheetUrl: spreadsheet.getUrl()
   };
 }
 
 /**
- * 구글 스프레드시트에 토스 블루 테마의 '실시간 분석 대시보드' 탭을 세팅하는 헬퍼 함수
+ * 구글 시트에 분석 대시보드 템플릿 세팅
  */
 function setupAnalysisDashboard(spreadsheet) {
-  const dashSheet = spreadsheet.getActiveSheet();
-  dashSheet.setName("📊 실시간 요약 대시보드");
+  const sheet = spreadsheet.getActiveSheet();
+  sheet.setName("📊 분석 대시보드 안내");
 
-  // 그리드 라인 유지
-  dashSheet.setHiddenGridlines(false);
-
-  // 1. 헤더 타이틀 배너 (TDS Toss Blue #3182F6)
-  dashSheet.getRange("A1:F1").merge();
-  const titleCell = dashSheet.getRange("A1");
-  titleCell.setValue("⚡ FitPulse 베타테스터 실시간 응답 현황 & SUS / NPS 분석 대시보드");
+  // 헤더 타이틀 배너 (Toss Blue #3182F6)
+  sheet.getRange("A1:E1").merge();
+  const titleCell = sheet.getRange("A1");
+  titleCell.setValue("⚡ FitPulse 베타테스터 실시간 응답 및 SUS / NPS 분석 가이드");
   titleCell.setBackground("#3182F6");
   titleCell.setFontColor("#FFFFFF");
   titleCell.setFontWeight("bold");
-  titleCell.setFontSize(14);
+  titleCell.setFontSize(13);
   titleCell.setHorizontalAlignment("center");
   titleCell.setVerticalAlignment("middle");
-  dashSheet.setRowHeight(1, 48);
+  sheet.setRowHeight(1, 44);
 
-  // 2. 안내 서브텍스트
-  dashSheet.getRange("A2:F2").merge();
-  const subCell = dashSheet.getRange("A2");
-  subCell.setValue("ℹ️ 사용자가 구글 폼을 통해 응답을 제출하면 '설문지 응답 1' 탭에 실시간으로 자동 적재됩니다.");
+  sheet.getRange("A2:E2").merge();
+  const subCell = sheet.getRange("A2");
+  subCell.setValue("ℹ️ 사용자가 폼을 제출하면 구글 폼이 자동으로 생성하는 '설문지 응답 1' 탭에 실시간으로 기록됩니다.");
   subCell.setBackground("#F2F4F6");
   subCell.setFontColor("#4E5968");
   subCell.setFontSize(10);
   subCell.setHorizontalAlignment("center");
-  dashSheet.setRowHeight(2, 28);
+  sheet.setRowHeight(2, 28);
 
-  // 3. 핵심 지표 KPI 카드 헤더
-  const kpiHeaders = [
-    ["지표 항목 (KPI)", "목표 기준", "현재 실시간 결과", "평가 등급", "비고"]
+  const headers = [["분석 항목", "측정 척도", "목표 기준", "집계 및 분석 방식"]];
+  sheet.getRange("A4:D4").setValues(headers).setBackground("#E5E8EB").setFontWeight("bold").setFontColor("#191F28");
+
+  const rows = [
+    ["TDS UI/UX 디자인 만족도 (Q7)", "1~5점 척도", "4.5점 이상", "토스 블루 및 클린 화이트 시인성 평균"],
+    ["한 손 조작성 & 퀵 중량 칩 (Q9)", "1~5점 척도", "4.5점 이상", "44px+ 터치 타겟 및 스테퍼 조작감 평균"],
+    ["점진적 과부하 볼륨 델타 동기부여 (Q14)", "1~5점 척도", "4.2점 이상", "지난 세션 대비 +kg, +% 체감 만족도"],
+    ["16주 토스 블루 잔디 히트맵 (Q15)", "1~5점 척도", "4.2점 이상", "5단계 잔디 스트릭 동기부여 평균"],
+    ["국제 표준 시스템 사용성 척도 (SUS)", "100점 만점", "80.3점 이상 (A등급)", "(홀수합-5 + 25-짝수합) × 2.5 공식 환산"],
+    ["순추천고객지수 (NPS Q19)", "0~10점 척도", "+40점 이상", "%Promoter(9-10) - %Detractor(0-6)"]
   ];
-  dashSheet.getRange("A4:E4").setValues(kpiHeaders);
-  dashSheet.getRange("A4:E4").setBackground("#E5E8EB").setFontWeight("bold").setFontColor("#191F28");
+  sheet.getRange("A5:D10").setValues(rows).setVerticalAlignment("middle").setFontSize(10);
 
-  // 4. KPI 카드 내용 및 수식 구성
-  // (구글 폼 연결 시 '설문지 응답 1' 시트가 자동 생성되므로, 해당 시트 참조 수식 적용)
-  const kpiRows = [
-    [
-      "총 설문 참여자 수",
-      "50명 이상",
-      '=IFERROR(COUNTA(\'설문지 응답 1\'!A2:A), "대기 중")',
-      '=IF(C5>=50, "✅ 목표 달성", "⏳ 진행 중")',
-      "리워드 30명 추첨 대상자 풀"
-    ],
-    [
-      "TDS UI/UX 디자인 만족도 (Q7)",
-      "4.5점 / 5.0점",
-      '=IFERROR(ROUND(AVERAGE(\'설문지 응답 1\'!I2:I), 2), "응답 대기")',
-      '=IF(ISNUMBER(C6), IF(C6>=4.5, "🥇 탁월", IF(C6>=4.0, "🥈 우수", "🥉 개선 필요")), "-")',
-      "토스 블루 & 클린 화이트 시인성"
-    ],
-    [
-      "한 손 조작성 & 퀵 중량 칩 (Q9)",
-      "4.5점 / 5.0점",
-      '=IFERROR(ROUND(AVERAGE(\'설문지 응답 1\'!K2:K), 2), "응답 대기")',
-      '=IF(ISNUMBER(C7), IF(C7>=4.5, "🥇 탁월", IF(C7>=4.0, "🥈 우수", "🥉 개선 필요")), "-")',
-      "엄지손가락 44px+ 터치 조작감"
-    ],
-    [
-      "점진적 과부하 볼륨 델타 동기부여 (Q14)",
-      "4.2점 / 5.0점",
-      '=IFERROR(ROUND(AVERAGE(\'설문지 응답 1\'!P2:P), 2), "응답 대기")',
-      '=IF(ISNUMBER(C8), IF(C8>=4.2, "🥇 탁월", "🥈 보통"), "-")',
-      "지난 세션 대비 +kg, +% 체감"
-    ],
-    [
-      "국제 표준 시스템 사용성 척도 (SUS 점수)",
-      "80.3점 이상 (A등급)",
-      "10문항 복합 환산 수식 적용",
-      "A등급 목표 (상위 10%)",
-      "100점 만점 환산 가이드 참조"
-    ],
-    [
-      "순추천고객지수 (NPS)",
-      "+40점 이상 (우수)",
-      '=IFERROR(ROUND(AVERAGE(\'설문지 응답 1\'!AA2:AA), 1), "응답 대기")',
-      '=IF(ISNUMBER(C10), IF(C10>=9, "🔥 프로모터 중심", "보통"), "-")',
-      "0~10점 척도 (Q19)"
-    ]
-  ];
-
-  dashSheet.getRange("A5:E10").setValues(kpiRows);
-  dashSheet.getRange("A5:E10").setVerticalAlignment("middle");
-  dashSheet.getRange("A5:E10").setFontSize(10);
-  dashSheet.getRange("B5:D10").setHorizontalAlignment("center");
-
-  // 테두리 적용
-  dashSheet.getRange("A4:E10").setBorder(true, true, true, true, true, true, "#D1D6DB", SpreadsheetApp.BorderStyle.SOLID);
-
-  // 5. SUS 계산 가이드 박스
-  dashSheet.getRange("A12:E12").merge().setValue("📐 SUS (System Usability Scale) 100점 만점 환산 공식");
-  dashSheet.getRange("A12:E12").setBackground("#F2F4F6").setFontWeight("bold").setFontColor("#191F28");
-
-  const susGuide = [
-    ["1. 홀수 문항(SUS 1, 3, 5, 7, 9) 점수 합계에서 각각 1을 뺍니다. (X = 점수합 - 5)"],
-    ["2. 짝수 문항(SUS 2, 4, 6, 8, 10)은 각각 5에서 응답 점수를 뺍니다. (Y = 25 - 점수합)"],
-    ["3. 최종 SUS 점수 = (X + Y) × 2.5 (100점 만점)"],
-    ["4. 평가 벤치마크: 68점(평균/OK), 74점(B등급/Good), 80.3점 이상(A등급/Excellent - 상위 10%)"]
-  ];
-  dashSheet.getRange("A13:E16").setValues(susGuide.map(r => [r[0], "", "", "", ""]));
-  dashSheet.getRange("A13:E16").setFontSize(9).setFontColor("#4E5968");
-
-  // 열 너비 자동 최적화
-  dashSheet.setColumnWidth(1, 320);
-  dashSheet.setColumnWidth(2, 140);
-  dashSheet.setColumnWidth(3, 160);
-  dashSheet.setColumnWidth(4, 140);
-  dashSheet.setColumnWidth(5, 240);
+  sheet.setColumnWidth(1, 300);
+  sheet.setColumnWidth(2, 120);
+  sheet.setColumnWidth(3, 160);
+  sheet.setColumnWidth(4, 300);
 }
 
 /**
