@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Volume2, VolumeX, Play, Pause, RotateCcw } from 'lucide-react';
+import { X, Volume2, VolumeX, Play, Pause, RotateCcw, Sparkles } from 'lucide-react';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { ThemeMode } from '../theme/pantone';
 import { TdsBadge, TdsButton } from './tds';
+import { INextSetRecommendation } from '../models/fitness';
 
 interface RestTimerModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface RestTimerModalProps {
   completedSetNumber?: number;
   exerciseName?: string;
   themeMode?: ThemeMode;
+  recommendation?: INextSetRecommendation | null;
 }
 
 const PRESET_TIMES = [
@@ -28,6 +30,7 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
   completedSetNumber = 1,
   exerciseName = '운동',
   themeMode = 'dark',
+  recommendation = null,
 }) => {
   const isLight = themeMode === 'light';
   const [totalSeconds, setTotalSeconds] = useState<number>(initialSeconds);
@@ -270,6 +273,50 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {/* Smart Next-Set Recommendation Card */}
+        {recommendation && (
+          <div
+            className={`w-full p-3.5 rounded-2xl mb-4 text-left border transition-all ${
+              isLight
+                ? 'bg-blue-50/70 border-blue-100/80 text-slate-800'
+                : 'bg-[#252528] border-blue-500/20 text-slate-200'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#3182F6]" />
+                <span className="text-xs font-bold text-[#3182F6]">
+                  다음 #{completedSetNumber + 1}세트 AI 추천
+                </span>
+              </div>
+              <TdsBadge
+                variant="weak"
+                color={
+                  recommendation.statusBadge === 'overload'
+                    ? 'blue'
+                    : recommendation.statusBadge === 'fatigue_care'
+                    ? 'red'
+                    : 'teal'
+                }
+                size="xsmall"
+              >
+                {recommendation.statusText}
+              </TdsBadge>
+            </div>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className={`text-base font-black font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {recommendation.targetWeight} kg × {recommendation.targetReps} 회
+              </span>
+              <span className="text-[11px] text-slate-400 font-medium">
+                (권장 휴식: {recommendation.restFormatted})
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 break-keep">
+              {recommendation.reason}
+            </p>
+          </div>
+        )}
 
         {/* Bottom Actions */}
         <div className="w-full grid grid-cols-2 gap-2.5">

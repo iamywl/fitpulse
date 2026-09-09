@@ -62,6 +62,21 @@ export interface IVolumeComparison {
   isDeload: boolean;
 }
 
+/**
+ * 과거 볼륨 및 피로도(RPE) 기반 다음 세트 추천 모델
+ */
+export interface INextSetRecommendation {
+  targetWeight: number;            // 추천 무게 (kg)
+  targetReps: number;              // 추천 반복수 (회)
+  recommendedRestSeconds: number;  // 추천 휴식시간 (초)
+  reason: string;                  // 추천 근거 (예: "직전 세션 대비 +3% 과부하 달성 추천")
+  statusBadge: 'overload' | 'maintain' | 'fatigue_care';
+  statusText: string;              // "과부하 증량" | "페이스 유지" | "피로 관리"
+  expectedSetVolume: number;       // 예상 세트 볼륨 (kg)
+  restFormatted: string;           // 휴식시간 포맷 (예: "2분", "1분 30초")
+  priorVolume?: number;            // 직전 동일 종목 볼륨
+}
+
 // 요일별 분할 루틴 모델 (Weekly Split Routine Planner / Viewer)
 export interface IWeeklySplitExercise {
   id: string;

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { IExerciseLog, IExerciseSet, WorkoutSession } from '../models/fitness';
 import { VolumeService } from '../services/calculator/VolumeService';
-import { Plus, Trash2, Dumbbell, Sparkles, Check } from 'lucide-react';
+import { ProgressionRecommendationService } from '../services/calculator/ProgressionRecommendationService';
+import { Plus, Trash2, Dumbbell, Sparkles, Check, Zap, ArrowUpRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ThemeMode } from '../theme/pantone';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
@@ -73,6 +74,15 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
 
   const avgRPE = VolumeService.getAverageRPE(sets);
 
+  // 실시간 점진적 과부하 및 피로도 기반 다음 세트 스마트 추천
+  const nextRecommendation = ProgressionRecommendationService.getNextRecommendation({
+    exerciseId: currentExercise.id,
+    exerciseName: currentExercise.name,
+    category: currentExercise.category,
+    currentSets: sets,
+    pastWorkouts: workouts,
+  });
+
   const handleAddSet = () => {
     const last = sets[sets.length - 1];
     const newSet: IExerciseSet = {
@@ -83,6 +93,30 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
       completed: true,
     };
     setSets(prev => [...prev, newSet]);
+  };
+
+  // AI 추천 무게/횟수로 새 세트 추가
+  const handleAddRecommendedSet = () => {
+    const newSet: IExerciseSet = {
+      id: `set-${Date.now()}`,
+      setNumber: sets.length + 1,
+      weight: nextRecommendation.targetWeight,
+      reps: nextRecommendation.targetReps,
+      completed: false, // 바로 수행할 수 있도록 미완료 상태로 추가
+    };
+    setSets(prev => [...prev, newSet]);
+  };
+
+  // 미완료 세트가 있을 경우 추천값 즉시 적용
+  const handleApplyRecommendationToTarget = (setId: string) => {
+    setSets(prev => prev.map(s => {
+      if (s.id !== setId) return s;
+      return {
+        ...s,
+        weight: nextRecommendation.targetWeight,
+        reps: nextRecommendation.targetReps,
+      };
+    }));
   };
 
   const handleRemoveSet = (setId: string) => {
@@ -116,7 +150,8 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
     if (willBeCompleted && targetSet) {
       AudioAlertService.playSetComplete();
       setCompletedSetForTimer(targetSet.setNumber);
-      setRestSecondsDuration(currentExercise.category === 'legs' || currentExercise.category === 'back' ? 120 : 90);
+      // 추천 알고리즘의 권장 휴식시간으로 타이머 자동 세팅
+      setRestSecondsDuration(nextRecommendation.recommendedRestSeconds);
       setIsRestTimerOpen(true);
     }
   };
@@ -253,6 +288,96 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         </div>
       </div>
 
+      {/* FitPulse AI 스마트 다음 세트 & 쉬는시간 추천 카드 */}
+      <div
+        className={`p-4 sm:p-5 rounded-2xl mb-5 border transition-all ${
+          isLight
+            ? 'bg-gradient-to-br from-blue-50/80 via-white to-blue-50/40 border-blue-100 shadow-sm'
+            : 'bg-gradient-to-br from-[#202838] via-[#1C1C1E] to-[#1C1C1E] border-blue-500/20'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Zap className="w-4 h-4 text-[#3182F6]" />
+            <span className="text-xs sm:text-sm font-bold text-[#3182F6]">
+              볼륨 기반 스마트 세트 & 휴식 추천
+            </span>
+          </div>
+          <TdsBadge
+            variant="weak"
+            color={
+              nextRecommendation.statusBadge === 'overload'
+                ? 'blue'
+                : nextRecommendation.statusBadge === 'fatigue_care'
+                ? 'red'
+                : 'teal'
+            }
+            size="small"
+          >
+            {nextRecommendation.statusText}
+          </TdsBadge>
+        </div>
+
+        {/* Target Specs Row */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2.5">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-xl sm:text-2xl font-black font-mono-num text-[#3182F6]">
+              {nextRecommendation.targetWeight} kg
+            </span>
+            <span className={`text-base sm:text-lg font-bold ${isLight ? 'text-slate-800' : 'text-slate-100'}`}>
+              × {nextRecommendation.targetReps} 회
+            </span>
+            <span className="text-xs font-semibold text-slate-400">
+              (세트 볼륨 {VolumeService.formatKg(nextRecommendation.expectedSetVolume)})
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className={`text-xs font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              권장 휴식:
+            </span>
+            <span className="text-xs font-bold text-[#00BFA5] px-2 py-0.5 rounded-lg bg-teal-50 dark:bg-teal-950/30">
+              ⏱ {nextRecommendation.restFormatted}
+            </span>
+          </div>
+        </div>
+
+        {/* Microcopy Reason */}
+        <p className="text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-300 mb-3.5 break-keep">
+          {nextRecommendation.reason}
+        </p>
+
+        {/* 1-Tap Quick Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleAddRecommendedSet}
+            className="flex-1 min-h-[40px] px-3 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 bg-[#3182F6] hover:bg-[#1B64DA] text-white shadow-sm active:scale-[0.98] transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>추천으로 다음 세트 추가</span>
+          </button>
+
+          {sets.some(s => !s.completed) && (
+            <button
+              type="button"
+              onClick={() => {
+                const target = sets.find(s => !s.completed);
+                if (target) handleApplyRecommendationToTarget(target.id);
+              }}
+              className={`min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1 active:scale-[0.98] transition-all border ${
+                isLight
+                  ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  : 'bg-[#252528] border-slate-700 text-slate-200 hover:bg-[#333D4B]'
+              }`}
+            >
+              <ArrowUpRight className="w-4 h-4 text-[#3182F6]" />
+              <span>미완료 세트에 반영</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Sets Cards */}
       <div className="space-y-3 mb-5">
         {sets.map((set) => (
@@ -320,6 +445,19 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
                 >
                   +5
                 </button>
+
+                {!set.completed && (
+                  <button
+                    type="button"
+                    onClick={() => handleApplyRecommendationToTarget(set.id)}
+                    className="min-h-[32px] px-2 py-1 rounded-lg text-xs font-bold transition-all bg-[#3182F6]/10 text-[#3182F6] hover:bg-[#3182F6] hover:text-white flex items-center gap-1"
+                    title={`AI 추천값(${nextRecommendation.targetWeight}kg × ${nextRecommendation.targetReps}회) 적용`}
+                  >
+                    <Zap className="w-3 h-3" />
+                    <span className="hidden xs:inline">추천</span>
+                  </button>
+                )}
+
                 {sets.length > 1 && (
                   <button
                     type="button"
@@ -499,6 +637,7 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         completedSetNumber={completedSetForTimer}
         exerciseName={currentExercise.name}
         themeMode={themeMode}
+        recommendation={nextRecommendation}
       />
     </div>
   );
