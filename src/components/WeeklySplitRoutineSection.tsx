@@ -96,6 +96,20 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
   const completedCount = activeDay.exercises.filter(ex => completedExercises[ex.id]).length;
   const progressPercent = totalExercises > 0 ? Math.round((completedCount / totalExercises) * 100) : 0;
 
+  // Clean 2-letter muscle label helper to prevent truncation in 7-day strip
+  const getShortMuscleLabel = (day: IWeeklySplitDay) => {
+    if (day.isRestDay) return '휴식';
+    const raw = (day.targetMuscles[0] || day.title || '').toLowerCase();
+    if (raw.includes('가슴') || raw.includes('대흉')) return '가슴';
+    if (raw.includes('등') || raw.includes('광배') || raw.includes('승모')) return '등';
+    if (raw.includes('하체') || raw.includes('대퇴') || raw.includes('스쿼트') || raw.includes('레그')) return '하체';
+    if (raw.includes('어깨') || raw.includes('삼각')) return '어깨';
+    if (raw.includes('팔') || raw.includes('이두') || raw.includes('삼두')) return '팔';
+    if (raw.includes('둔근') || raw.includes('엉덩이')) return '둔근';
+    if (raw.includes('코어') || raw.includes('복근')) return '코어';
+    return raw.slice(0, 2);
+  };
+
   return (
     <div
       className={`rounded-3xl ${
@@ -107,13 +121,13 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
       }`}
     >
       {/* Header Bar */}
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#E8F3FF] dark:bg-[#3182F6]/15 text-[#3182F6] flex-shrink-0">
             <CalendarDays className="w-5 h-5" />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-lg sm:text-xl font-black tracking-tight whitespace-nowrap">
                 이번 주 운동 계획
               </h2>
@@ -121,7 +135,7 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                 주간 분할
               </TdsBadge>
             </div>
-            <p className={`text-xs ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+            <p className={`text-xs break-keep ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
               요일을 선택하여 루틴을 확인하세요
             </p>
           </div>
@@ -145,17 +159,13 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           {orderedSplitList.map((day) => {
             const isToday = day.dayIndex === currentDayIndex;
             const isSelected = day.dayIndex === selectedDayIndex;
-            const primaryMuscle = day.isRestDay
-              ? '휴식'
-              : day.targetMuscles[0]
-              ? day.targetMuscles[0].replace(' (전체)', '').replace('대흉근', '가슴').replace('광배근', '등').replace('대퇴사두', '하체').replace('전면삼각근', '어깨').replace('측면삼각근', '어깨')
-              : day.title.split(' ')[0];
+            const muscleText = getShortMuscleLabel(day);
 
             return (
               <button
                 key={day.dayKey}
                 onClick={() => setSelectedDayIndex(day.dayIndex)}
-                className={`flex flex-col items-center justify-between py-2.5 px-1 rounded-2xl transition-all relative select-none min-h-[78px] ${
+                className={`flex flex-col items-center justify-between py-2 px-0.5 rounded-2xl transition-all relative select-none min-h-[76px] ${
                   isSelected
                     ? 'bg-[#3182F6] text-white shadow-sm font-black'
                     : isToday
@@ -181,7 +191,7 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                 )}
 
                 {/* Day of week */}
-                <div className="flex flex-col items-center leading-none">
+                <div className="flex flex-col items-center leading-none mt-1">
                   <span className={`text-[10px] font-mono tracking-wider ${isSelected ? 'text-white' : ''}`}>
                     {day.englishShort}
                   </span>
@@ -190,10 +200,10 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                   </span>
                 </div>
 
-                {/* Target Muscle Tag */}
+                {/* Target Muscle Tag (Clean 2-letter, never truncated) */}
                 <div className="mt-1 w-full flex items-center justify-center">
                   <span
-                    className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md truncate max-w-full text-center ${
+                    className={`text-[10px] font-bold px-1 py-0.5 rounded-md whitespace-nowrap text-center ${
                       isSelected
                         ? 'bg-white/20 text-white'
                         : day.isRestDay
@@ -201,7 +211,7 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                         : isDark ? 'bg-[#242529] text-[#B0B8C1]' : 'bg-white text-[#4E5968]'
                     }`}
                   >
-                    {primaryMuscle}
+                    {muscleText}
                   </span>
                 </div>
               </button>
@@ -212,7 +222,7 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
 
       {/* Main Routine Details Card */}
       <div
-        className={`rounded-2xl p-4 transition-colors ${
+        className={`rounded-2xl p-4 sm:p-5 transition-colors ${
           isDark ? 'bg-[#101012] border border-[#2C2C2E]' : 'bg-[#F2F4F6] border border-slate-200'
         }`}
       >
@@ -240,10 +250,10 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                 </TdsBadge>
               )}
             </div>
-            <h3 className="text-base sm:text-lg font-black tracking-tight">
+            <h3 className="text-base sm:text-lg font-black tracking-tight break-keep">
               {activeDay.title}
             </h3>
-            <p className={`text-xs mt-0.5 ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
+            <p className={`text-xs mt-0.5 break-keep ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
               {activeDay.categoryDesc}
             </p>
           </div>
@@ -287,16 +297,19 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           </div>
         )}
 
-        {/* Exercise List */}
-        <div className="mt-3 space-y-2">
+        {/* Exercise List - TDS Mobile 2-Row Stacked Layout (Never Truncates!) */}
+        <div className="mt-3 space-y-2.5">
           {activeDay.exercises.map((exercise, index) => {
             const isCompleted = !!completedExercises[exercise.id];
+            const normalizedReps = exercise.reps.endsWith('회') || exercise.reps.endsWith('분')
+              ? exercise.reps
+              : `${exercise.reps}회`;
 
             return (
               <div
                 key={exercise.id}
                 onClick={() => handleToggleExercise(exercise.id)}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 ${
+                className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none flex flex-col gap-2 ${
                   isCompleted
                     ? isDark
                       ? 'bg-[#1C1C1E]/60 border-[#2C2C2E] opacity-60'
@@ -306,49 +319,40 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                     : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
                 }`}
               >
-                {/* Left: Check icon + Details */}
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                      isCompleted
-                        ? 'bg-[#00C73C] text-white'
-                        : isDark
-                        ? 'border-2 border-[#3A3B42]'
-                        : 'border-2 border-slate-300'
-                    }`}
-                  >
-                    {isCompleted && <CheckCircle2 className="w-4 h-4 text-white" />}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-xs font-mono font-bold ${isDark ? 'text-[#6B7684]' : 'text-[#8B95A1]'}`}>
-                        0{index + 1}
-                      </span>
-                      <span className={`text-sm font-bold truncate ${
-                        isCompleted ? 'line-through text-[#8B95A1]' : isDark ? 'text-white' : 'text-[#191F28]'
-                      }`}>
-                        {exercise.name}
-                      </span>
-                      <TdsBadge size="xsmall" variant="weak" color="elephant" isDark={isDark}>
-                        {exercise.targetMuscle}
-                      </TdsBadge>
+                {/* Row 1: Check Icon + Number + FULL Exercise Name + Action Button */}
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div
+                      className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                        isCompleted
+                          ? 'bg-[#00C73C] text-white'
+                          : isDark
+                          ? 'border-2 border-[#3A3B42]'
+                          : 'border-2 border-slate-300'
+                      }`}
+                    >
+                      {isCompleted && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                     </div>
-                  </div>
-                </div>
 
-                {/* Right: Sets x Reps */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className={`px-2.5 py-1 rounded-xl text-xs font-bold font-mono ${
-                    isDark ? 'bg-[#242529] text-white' : 'bg-[#F2F4F6] text-[#191F28]'
-                  }`}>
-                    {exercise.sets}세트 × {exercise.reps}회
+                    <span className={`text-xs font-mono font-bold flex-shrink-0 ${isDark ? 'text-[#6B7684]' : 'text-[#8B95A1]'}`}>
+                      0{index + 1}
+                    </span>
+
+                    {/* FULL Exercise Name - break-keep, NEVER truncated */}
+                    <h4
+                      className={`text-sm sm:text-base font-bold break-keep leading-snug flex-1 ${
+                        isCompleted ? 'line-through text-[#8B95A1]' : isDark ? 'text-white' : 'text-[#191F28]'
+                      }`}
+                    >
+                      {exercise.name}
+                    </h4>
                   </div>
 
+                  {/* Right: Record Button */}
                   {onSelectRoutineExercise && !activeDay.isRestDay && (
                     <TdsButton
                       size="small"
-                      variant="weak"
+                      variant={isCompleted ? 'secondary' : 'weak'}
                       isDark={isDark}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -365,8 +369,25 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                         );
                       }}
                     >
-                      기록하기
+                      {isCompleted ? '완료됨' : '기록하기'}
                     </TdsButton>
+                  )}
+                </div>
+
+                {/* Row 2: Target Muscle Badge + Sets x Reps + Rest time */}
+                <div className="flex items-center gap-2 pl-7 flex-wrap">
+                  <TdsBadge size="xsmall" variant="weak" color="elephant" isDark={isDark}>
+                    {exercise.targetMuscle}
+                  </TdsBadge>
+                  <span className={`text-xs font-medium font-mono ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
+                    {exercise.sets}세트 · 세트당 {normalizedReps}
+                  </span>
+                  {exercise.restSeconds > 0 && (
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md ${
+                      isDark ? 'bg-[#252528] text-[#8B95A1]' : 'bg-[#F2F4F6] text-[#6B7684]'
+                    }`}>
+                      휴식 {exercise.restSeconds >= 60 ? `${Math.floor(exercise.restSeconds / 60)}분 ${exercise.restSeconds % 60 > 0 ? `${exercise.restSeconds % 60}초` : ''}` : `${exercise.restSeconds}초`}
+                    </span>
                   )}
                 </div>
               </div>

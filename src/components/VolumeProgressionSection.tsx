@@ -8,12 +8,14 @@ import confetti from 'canvas-confetti';
 
 interface VolumeProgressionSectionProps {
   workouts: WorkoutSession[];
+  onLoadSampleData?: () => void;
   isMobileView?: boolean;
   themeMode?: 'dark' | 'light';
 }
 
 export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> = ({
   workouts,
+  onLoadSampleData,
   isMobileView = false,
   themeMode = 'light',
 }) => {
@@ -88,9 +90,14 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
         <p className="text-sm font-black">
           성장 분석을 위해 최소 2개 이상의 운동 기록이 필요해요
         </p>
-        <p className={`text-xs mt-1 max-w-md mx-auto ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
-          오늘 운동을 완료하거나, 상단의 <strong>[샘플]</strong> 버튼을 누르면 직전 세션 대비 점진적 과부하 리포트를 바로 체험할 수 있어요.
+        <p className={`text-xs mt-1 mb-4 max-w-md mx-auto ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+          오늘 운동을 완료하거나, 아래 버튼을 눌러 점진적 과부하 리포트를 바로 체험해 보세요.
         </p>
+        {onLoadSampleData && (
+          <TdsButton size="small" variant="weak" isDark={isDark} onClick={onLoadSampleData}>
+            샘플 데이터로 둘러보기
+          </TdsButton>
+        )}
       </div>
     );
   }

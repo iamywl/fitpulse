@@ -59,7 +59,7 @@ export const TdsButton: React.FC<TdsButtonProps> = ({
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 select-none tracking-tight ${SIZE_STYLES[size]} ${variantStyle} ${disabledStyle} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 select-none tracking-tight whitespace-nowrap flex-shrink-0 ${SIZE_STYLES[size]} ${variantStyle} ${disabledStyle} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...rest}
     >
       {loading ? (
@@ -70,7 +70,7 @@ export const TdsButton: React.FC<TdsButtonProps> = ({
       ) : (
         leftIcon && <span className="flex-shrink-0 flex items-center justify-center">{leftIcon}</span>
       )}
-      <span>{children}</span>
+      <span className="whitespace-nowrap">{children}</span>
       {!loading && rightIcon && (
         <span className="flex-shrink-0 flex items-center justify-center">{rightIcon}</span>
       )}

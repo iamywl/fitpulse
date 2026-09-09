@@ -102,11 +102,11 @@ export const TdsBadge: React.FC<TdsBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 flex-shrink-0 tracking-tight transition-colors ${SIZE_STYLES[size]} ${colorStyle} ${className}`}
+      className={`inline-flex items-center gap-1 flex-shrink-0 whitespace-nowrap tracking-tight transition-colors ${SIZE_STYLES[size]} ${colorStyle} ${className}`}
       {...rest}
     >
       {icon && <span className="flex-shrink-0 flex items-center justify-center">{icon}</span>}
-      <span>{children}</span>
+      <span className="whitespace-nowrap">{children}</span>
     </span>
   );
 };

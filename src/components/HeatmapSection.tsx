@@ -9,6 +9,7 @@ interface HeatmapSectionProps {
   workouts: WorkoutSession[];
   onSelectWorkout?: (workout: WorkoutSession) => void;
   onQuickLogToday?: () => void;
+  onLoadSampleData?: () => void;
   isMobileView?: boolean;
   themeMode?: 'dark' | 'light';
 }
@@ -17,6 +18,7 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
   workouts,
   onSelectWorkout,
   onQuickLogToday,
+  onLoadSampleData,
   isMobileView = false,
   themeMode = 'light',
 }) => {
@@ -203,13 +205,20 @@ export const HeatmapSection: React.FC<HeatmapSectionProps> = ({
         }`}>
           <div className="flex items-center gap-2">
             <Info className="w-4 h-4 text-[#3182F6] flex-shrink-0" />
-            <span>아직 저장된 운동 기록이 없어요. 오늘 운동을 시작해 첫 번째 잔디를 채워보세요!</span>
+            <span className="break-keep">아직 저장된 운동 기록이 없어요. 16주 시연용 샘플 데이터를 채우거나 오늘 첫 운동을 시작해 보세요!</span>
           </div>
-          {onQuickLogToday && (
-            <TdsButton size="small" variant="weak" isDark={isDark} onClick={onQuickLogToday}>
-              오늘 운동 기록하기
-            </TdsButton>
-          )}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {onLoadSampleData && (
+              <TdsButton size="small" variant="primary" isDark={isDark} onClick={onLoadSampleData}>
+                샘플 데이터 채우기
+              </TdsButton>
+            )}
+            {onQuickLogToday && (
+              <TdsButton size="small" variant="secondary" isDark={isDark} onClick={onQuickLogToday}>
+                오늘 운동 기록하기
+              </TdsButton>
+            )}
+          </div>
         </div>
       )}
 

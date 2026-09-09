@@ -270,6 +270,7 @@ export function App() {
               workouts={workouts}
               onSelectWorkout={(w) => setSelectedWorkoutDetail(w)}
               onQuickLogToday={handleQuickSimulateToday}
+              onLoadSampleData={handleResetMockData}
               isMobileView={isMobile}
               themeMode={themeMode}
             />
@@ -278,6 +279,7 @@ export function App() {
           <section>
             <VolumeProgressionSection
               workouts={workouts}
+              onLoadSampleData={handleResetMockData}
               isMobileView={isMobile}
               themeMode={themeMode}
             />

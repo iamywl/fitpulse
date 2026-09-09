@@ -11,6 +11,7 @@ import { TdsButton } from './tds/TdsButton';
 import { TdsBottomCTA } from './tds/TdsBottomCTA';
 import { 
   Check, 
+  CheckCircle2,
   Sparkles, 
   Trash2, 
   ChevronRight, 
@@ -53,6 +54,9 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
   const todayWorkoutSession = useMemo(() => {
     return workouts.find(w => w.date === todayStr);
   }, [workouts, todayStr]);
+
+  const [isEditingAfterComplete, setIsEditingAfterComplete] = useState<boolean>(false);
+  const isTodayCompleted = !!todayWorkoutSession && !isEditingAfterComplete;
 
   // Selected Active Exercise inside today's workout
   const [activeExerciseIndex, setActiveExerciseIndex] = useState<number>(0);
@@ -329,6 +333,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
     };
 
     onSaveWorkoutSession(newSession);
+    setIsEditingAfterComplete(false);
     confetti({
       particleCount: 100,
       spread: 80,
@@ -371,6 +376,14 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
     );
   }
 
+  const finalVolume = todayWorkoutSession?.totalVolume || todayLiveVolume;
+  const finalCompletedExercises = todayWorkoutSession
+    ? todayWorkoutSession.exercises.length
+    : completedExercisesCount;
+  const finalCompletedSets = todayWorkoutSession
+    ? todayWorkoutSession.exercises.reduce((sum, ex) => sum + ex.sets.filter(s => s.completed).length, 0)
+    : Object.values(exerciseSetsMap).reduce((sum, sets) => sum + sets.filter(s => s.completed).length, 0);
+
   return (
     <div className={`space-y-4 pb-24 ${isMobileView ? 'px-0' : ''}`}>
       {/* 1. Workout Header HUD & Progress Ribbon */}
@@ -384,9 +397,15 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
         <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'flex-col sm:flex-row sm:items-center justify-between gap-3'} mb-4`}>
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <TdsBadge size="small" variant="weak" color="blue" isDark={isDark}>
-                {todaySplitDay.dayName}요일 운동
-              </TdsBadge>
+              {isTodayCompleted ? (
+                <TdsBadge size="small" variant="fill" color="green" isDark={isDark} icon={<CheckCircle2 className="w-3.5 h-3.5 text-white" />}>
+                  오늘 운동 완료
+                </TdsBadge>
+              ) : (
+                <TdsBadge size="small" variant="weak" color="blue" isDark={isDark}>
+                  {todaySplitDay.dayName}요일 운동
+                </TdsBadge>
+              )}
               <span className={`text-xs font-medium ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                 {todayStr}
               </span>
@@ -395,10 +414,12 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight whitespace-nowrap break-keep">
-              오늘 할 운동이에요
+              {isTodayCompleted ? '오늘 운동을 멋지게 완료했어요! 🎉' : '오늘 할 운동이에요'}
             </h1>
-            <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
-              {todaySplitDay.title} · {todaySplitDay.categoryDesc}
+            <p className={`text-xs sm:text-sm mt-0.5 break-keep ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
+              {isTodayCompleted
+                ? `총 ${Math.round(finalVolume).toLocaleString()}kg의 볼륨을 들어올리며 점진적 과부하를 달성했어요`
+                : `${todaySplitDay.title} · ${todaySplitDay.categoryDesc}`}
             </p>
           </div>
 
@@ -412,7 +433,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
               </div>
               <div className="flex items-baseline gap-1">
                 <span className={`text-lg sm:text-xl font-black font-mono-num ${isDark ? 'text-white' : 'text-[#191F28]'}`}>
-                  {Math.round(todayLiveVolume).toLocaleString()}
+                  {Math.round(finalVolume).toLocaleString()}
                 </span>
                 <span className={`text-xs font-bold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                   kg
@@ -427,25 +448,118 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                 진행 상황
               </div>
               <div className="flex items-baseline gap-1 font-mono-num font-black">
-                <span className="text-lg sm:text-xl text-[#3182F6]">
-                  {completedExercisesCount}/{totalExercisesCount}
+                <span className={`text-lg sm:text-xl ${isTodayCompleted ? 'text-[#00C73C]' : 'text-[#3182F6]'}`}>
+                  {finalCompletedExercises}/{totalExercisesCount}
                 </span>
                 <span className={`text-xs font-medium ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
-                  ({progressPercent}%)
+                  ({isTodayCompleted ? 100 : progressPercent}%)
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Progress Bar (TDS Blue) */}
+        {/* Progress Bar (TDS Blue or Green if complete) */}
         <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-[#2C2C2E]' : 'bg-[#F2F4F6]'}`}>
           <div 
-            className="h-full bg-[#3182F6] transition-all duration-300 rounded-full"
-            style={{ width: `${progressPercent}%` }}
+            className={`h-full transition-all duration-300 rounded-full ${isTodayCompleted ? 'bg-[#00C73C]' : 'bg-[#3182F6]'}`}
+            style={{ width: `${isTodayCompleted ? 100 : progressPercent}%` }}
           />
         </div>
       </div>
+
+      {/* Prominent TDS Celebration Summary Card when completed */}
+      {isTodayCompleted && (
+        <div className={`p-5 sm:p-6 rounded-3xl border text-center transition-all ${
+          isDark
+            ? 'bg-gradient-to-b from-[#1C2838] to-[#1C1C1E] border-[#3182F6]/30 text-white'
+            : 'bg-gradient-to-b from-[#EBF3FE] to-white border-[#3182F6]/25 shadow-sm text-[#191F28]'
+        }`}>
+          <div className="w-12 h-12 rounded-2xl bg-[#00C73C] text-white flex items-center justify-center mx-auto mb-3 shadow-md">
+            <CheckCircle2 className="w-6 h-6 text-white" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+            오늘 운동 완주를 축하해요! 👏
+          </h2>
+          <p className={`text-xs sm:text-sm mt-1 max-w-sm mx-auto break-keep ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
+            오늘의 노력이 잔디 히트맵에 안전하게 쌓였어요. 점진적 과부하 성장 리포트를 확인해 보세요.
+          </p>
+
+          {/* 4 Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5 mb-5 text-left">
+            <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
+              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>들어 올린 볼륨</span>
+              <div className="text-lg font-black text-[#3182F6] font-mono-num mt-0.5">
+                {Math.round(finalVolume).toLocaleString()} <span className="text-xs font-normal text-[#6B7684]">kg</span>
+              </div>
+            </div>
+
+            <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
+              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>완주 종목</span>
+              <div className="text-lg font-black font-mono-num mt-0.5">
+                {finalCompletedExercises} <span className="text-xs font-normal text-[#6B7684]">종목</span>
+              </div>
+            </div>
+
+            <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
+              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>완료 세트</span>
+              <div className="text-lg font-black text-[#00C73C] font-mono-num mt-0.5">
+                {finalCompletedSets} <span className="text-xs font-normal text-[#6B7684]">세트</span>
+              </div>
+            </div>
+
+            <div className={`p-3.5 rounded-2xl border ${isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'}`}>
+              <span className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>예상 소요 시간</span>
+              <div className="text-lg font-black font-mono-num mt-0.5">
+                약 {todayWorkoutSession?.durationMinutes || todaySplitDay.estimatedMinutes} <span className="text-xs font-normal text-[#6B7684]">분</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+            {onNavigateTab && (
+              <TdsButton
+                size="medium"
+                variant="primary"
+                fullWidth={isMobileView}
+                onClick={() => onNavigateTab('analytics')}
+                leftIcon={<Sparkles className="w-4 h-4" />}
+              >
+                성장 분석(잔디 히트맵) 확인하기
+              </TdsButton>
+            )}
+            <TdsButton
+              size="medium"
+              variant="secondary"
+              fullWidth={isMobileView}
+              isDark={isDark}
+              onClick={() => setIsEditingAfterComplete(true)}
+            >
+              기록 수정하기
+            </TdsButton>
+          </div>
+        </div>
+      )}
+
+      {/* Editing State Banner */}
+      {isEditingAfterComplete && (
+        <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-2 text-xs ${
+          isDark ? 'bg-[#252528] border-[#3182F6]/40 text-white' : 'bg-[#E8F3FF] border-[#3182F6]/30 text-[#1B64DA]'
+        }`}>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#3182F6]" />
+            <span className="font-bold">기록 수정 모드예요. 변경 후 아래 완료 버튼을 눌러주세요.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditingAfterComplete(false)}
+            className="text-xs underline font-semibold flex-shrink-0"
+          >
+            수정 취소
+          </button>
+        </div>
+      )}
 
       {/* 2. Horizontal Exercise Switcher Carousel + Add/Replace Drawer Trigger */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -753,17 +867,25 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
 
       {/* 4. Bottom Fixed Floating CTA (TDS Mobile BottomCTA) */}
       <TdsBottomCTA
-        text={`오늘 ${todaySplitDay.dayName}요일 운동 완료하기`}
+        text={
+          isTodayCompleted
+            ? `오늘 운동 완료됨 (총 ${Math.round(finalVolume).toLocaleString()}kg)`
+            : isEditingAfterComplete
+            ? '수정한 오늘 운동 저장하기'
+            : `오늘 ${todaySplitDay.dayName}요일 운동 완료하기`
+        }
         subText={
-          completedExercisesCount > 0
+          isTodayCompleted
+            ? '성장 분석 탭에서 잔디 히트맵을 확인해보세요 👏'
+            : completedExercisesCount > 0
             ? `오늘 총 ${Math.round(todayLiveVolume).toLocaleString()}kg을 들어 올렸어요 👍`
             : '세트를 완료하고 기록을 저장해볼까요?'
         }
-        variant="primary"
+        variant={isTodayCompleted ? 'secondary' : 'primary'}
         isDark={isDark}
         isSimulator={isMobileView}
-        onClick={handleSaveTodaySession}
-        leftIcon={<Sparkles className="w-4 h-4" />}
+        onClick={isTodayCompleted ? () => onNavigateTab?.('analytics') : handleSaveTodaySession}
+        leftIcon={isTodayCompleted ? <CheckCircle2 className="w-4 h-4 text-[#00C73C]" /> : <Sparkles className="w-4 h-4" />}
       />
 
       {/* Rest Timer Modal */}
@@ -896,7 +1018,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <div className={`text-right text-xs font-mono ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
-                        <div>{masterEx.defaultSets}세트 · {masterEx.defaultReps}회</div>
+                        <div>{masterEx.defaultSets}세트 · {masterEx.defaultReps.endsWith('회') ? masterEx.defaultReps : `${masterEx.defaultReps}회`}</div>
                       </div>
                       <TdsButton size="small" variant="weak" isDark={isDark}>
                         선택
