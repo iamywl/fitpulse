@@ -17,6 +17,7 @@ export interface TdsBottomCTAProps {
   };
   isDark?: boolean;
   className?: string;
+  isSimulator?: boolean;
 }
 
 export const TdsBottomCTA: React.FC<TdsBottomCTAProps> = ({
@@ -31,23 +32,28 @@ export const TdsBottomCTA: React.FC<TdsBottomCTAProps> = ({
   secondaryAction,
   isDark = false,
   className = '',
+  isSimulator = false,
 }) => {
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-30 pointer-events-none px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors ${className}`}
+      className={
+        isSimulator
+          ? `sticky bottom-0 left-0 right-0 z-20 pointer-events-none px-2 pb-2 transition-all ${className}`
+          : `fixed bottom-0 left-0 right-0 z-30 pointer-events-none px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors ${className}`
+      }
     >
       <div className="max-w-md mx-auto w-full pointer-events-auto">
         <div
-          className={`p-2 rounded-2xl sm:rounded-3xl shadow-xl backdrop-blur-xl border transition-all ${
+          className={`p-2.5 rounded-2xl shadow-xl backdrop-blur-xl border transition-all ${
             isDark
-              ? 'bg-[#1C1C1E]/95 border-[#2C2C2E]/80 shadow-black/50'
-              : 'bg-white/95 border-slate-200/80 shadow-slate-200/80'
+              ? 'bg-[#1C1C1E]/95 border-[#2C2C2E]/90 shadow-black/60'
+              : 'bg-white/95 border-slate-200/90 shadow-slate-300/60'
           }`}
         >
           {subText && (
             <p
-              className={`text-center text-xs font-semibold mb-2 ${
-                isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'
+              className={`text-center text-xs font-semibold mb-1.5 truncate ${
+                isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'
               }`}
             >
               {subText}

@@ -18,12 +18,17 @@
 - **공통 컴포넌트**: `src/components/tds/`의 `TdsBadge`, `TdsButton`, `TdsBottomCTA`, `TdsListRow`, `TdsSegmentedControl`, `TdsStepper`를 재사용한다.
 - **마이크로카피**: 기계적인 안내문 대신 친근한 대화형 마이크로카피("~했어요", "~해볼까요?", "오늘 할 운동이에요")를 사용한다.
 
-## 3. 모바일 뷰포트 인체공학 & 타이포그래피 황금 비율 (Anti-Squish & Proportion)
-- 390px 스마트폰 프레임 내부에서 텍스트 수직 쪼개짐(`바\n벨\n벤\n치...`)을 절대 허용하지 않는다.
-- `isMobileView` 시 1열(1-Column) 전용 카드를 렌더링하고, 종목명과 단위에는 `whitespace-nowrap`을 적용한다.
-- 수치와 단위(`kg`, `회`)는 반드시 `flex items-baseline`으로 정렬하며 단위 크기는 약 50~60% 크기를 유지한다.
+## 3. 모바일 뷰포트 인체공학 & iPhone 15 Pro Max 표준 (Anti-Squish & Safe Area)
+- **최신 플래그십 기준**: iPhone 15 Pro Max (430px × 932px, 19.5:9 화면비)를 최우선 모바일 기준으로 설정한다.
+- **Safe Area Inset 보장**:
+  - Safe Area Top: **최소 59px** (Dynamic Island 높이 35px + 여백) 확보하여 컨텐츠 상단 잘림 및 겹침을 방지한다.
+  - Safe Area Bottom: **최소 34px** (Home Indicator) 확보하여 하단 탭 및 CTA 버튼 가림을 방지한다.
+- **미디어 쿼리 누수(Media Query Leakage) 방지**:
+  - 데스크톱에서 모바일 시뮬레이터 구동 시 Tailwind `sm:`, `md:`가 발동되어 430px 내부 레이아웃이 2열로 깨지는 현상을 차단한다.
+  - `isMobileView` 프롭이 활성화되면 부모 윈도우 크기와 상관없이 강제 1열(1-Column) 모바일 레이아웃을 렌더링하고, 종목명/텍스트에 `whitespace-nowrap`과 `break-keep-all`을 적용하여 세로 쪼개짐("오늘 할 운\n동이에요")을 원천 금지한다.
+- **Viewport 탈출 방지 (Fixed Containment)**:
+  - 시뮬레이터 환경에서 `position: fixed` 요소(`TdsBottomCTA` 등)가 브라우저 바닥으로 튕겨나가지 않도록 프레임 내부 격리(`sticky` 또는 absolute/transform 바인딩)를 보장한다.
 - 모든 주요 터치 타겟(버튼, 닫기, 스테퍼)은 Apple HIG 기준 최소 44 × 44px 터치 영역을 확보한다.
-- 7-Day 스트립 바는 오늘 뱃지가 프레임 상단에 잘리지 않도록 안전 상단 패딩을 보장한다.
 
 ## 4. 크로스 플랫폼 도커 표준 (Docker)
 - Mac (Apple Silicon arm64 & Intel) 및 Windows (WSL2 & Docker Desktop) 어디서나 `docker-compose up`으로 빌드 및 구동되어야 한다.

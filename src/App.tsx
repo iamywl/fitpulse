@@ -333,93 +333,119 @@ export function App() {
       {/* Main Viewport Container */}
       <main className="flex-1 w-full mx-auto px-2 sm:px-4 lg:px-8 py-4 flex justify-center">
         {viewMode === 'mobile' ? (
-          /* Mobile Smartphone Simulator Frame */
-          <div
-            className={`relative w-full max-w-[420px] rounded-[44px] p-3 shadow-xl border flex flex-col my-2 transition-all ${
-              isDark
-                ? 'bg-[#101012] border-[#2C2C2E] shadow-2xl ring-1 ring-white/5'
-                : 'bg-[#F2F4F6] border-slate-200 shadow-xl shadow-slate-200/70 ring-1 ring-black/5'
-            }`}
-          >
-            {/* Dynamic Island / Status Bar */}
-            <div className={`relative z-20 flex justify-between items-center px-6 pt-2 pb-1 text-xs select-none ${
-              isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'
-            }`}>
-              <span className={`font-black font-mono-num ${isDark ? 'text-white' : 'text-[#191F28]'}`}>9:41</span>
-              <div className={`w-24 h-5 rounded-full flex items-center justify-center border ${
-                isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-black border-slate-800'
+          /* iPhone 15 Pro Max Simulator Frame (430px × 932px, 55px Corner Radius) */
+          <div className="flex flex-col items-center my-2">
+            <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mb-2 flex items-center gap-1.5">
+              <span>Apple iPhone 15 Pro Max · 430 × 932 pt</span>
+            </div>
+
+            <div
+              className={`relative w-[430px] h-[932px] rounded-[55px] border-[10px] shadow-2xl flex flex-col overflow-hidden transition-all select-none ${
+                isDark
+                  ? 'bg-[#101012] border-[#252528] ring-1 ring-white/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]'
+                  : 'bg-[#F2F4F6] border-[#1C1C1E] ring-1 ring-black/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)]'
+              }`}
+            >
+              {/* iPhone 15 Pro Max Hardware: Top Speaker Earpiece Slit */}
+              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-[#333D4B]/40 pointer-events-none z-40" />
+
+              {/* Status Bar & Dynamic Island (Top Safe Area = 59px) */}
+              <div className="absolute top-0 left-0 right-0 h-[59px] z-30 pointer-events-none flex items-center justify-between px-7 pt-1 select-none backdrop-blur-md bg-white/40 dark:bg-[#101012]/40">
+                {/* Left: Clock */}
+                <span className={`text-sm font-bold tracking-tight font-mono-num ${isDark ? 'text-white' : 'text-[#191F28]'}`}>
+                  9:41
+                </span>
+
+                {/* Center: Dynamic Island (126px × 37px, rounded-full) */}
+                <div className="w-[126px] h-[37px] rounded-[20px] bg-black border border-black/80 flex items-center justify-between px-3 shadow-inner pointer-events-auto">
+                  {/* Camera lens reflection */}
+                  <div className="w-3 h-3 rounded-full bg-[#1A1A1E] border border-[#2C2C2E] flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#0E1A2E]" />
+                  </div>
+                  {/* Subtle sensor indicator / Toss pulse */}
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#3182F6]/90 animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Right: Icons (Signal, Wifi, Battery) */}
+                <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200">
+                  <Wifi className="w-4 h-4" />
+                  <Battery className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* Scrollable Mobile App Body with 64px Top Padding (clears Dynamic Island) and 96px Bottom Padding */}
+              <div className={`flex-1 overflow-y-auto pt-[64px] pb-[96px] px-3.5 scrollbar-thin ${
+                isDark ? 'scrollbar-thumb-[#2C2C2E]' : 'scrollbar-thumb-slate-300'
               }`}>
-                <div className="w-2.5 h-2.5 rounded-full bg-[#2C2C2E] mr-2" />
-                <div className="w-2 h-2 rounded-full bg-[#3182F6]" />
+                {renderContentSections()}
               </div>
-              <div className="flex items-center gap-1.5">
-                <Wifi className="w-3.5 h-3.5" />
-                <Battery className="w-4 h-4" />
+
+              {/* Pinned Mobile Bottom Navigation Bar (4 Core Tabs) */}
+              <div className={`absolute bottom-0 left-0 right-0 z-30 backdrop-blur-xl border-t transition-colors ${
+                isDark ? 'bg-[#101012]/95 border-[#2C2C2E]' : 'bg-white/95 border-slate-200'
+              }`}>
+                <div className="grid grid-cols-4 items-center pt-1.5 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('today')}
+                    className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1 transition-all min-h-[44px] ${
+                      activeTab === 'today'
+                        ? 'text-[#3182F6] font-black'
+                        : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
+                    }`}
+                  >
+                    <Zap className={`w-4 h-4 ${activeTab === 'today' ? 'fill-current' : ''}`} />
+                    <span>오늘 운동</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('split')}
+                    className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1 transition-all min-h-[44px] ${
+                      activeTab === 'split'
+                        ? 'text-[#3182F6] font-black'
+                        : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
+                    }`}
+                  >
+                    <CalendarDays className="w-4 h-4" />
+                    <span>주간 계획</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('analytics')}
+                    className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1 transition-all min-h-[44px] ${
+                      activeTab === 'analytics'
+                        ? 'text-[#3182F6] font-black'
+                        : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
+                    }`}
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                    <span>성장 분석</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('inbody')}
+                    className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1 transition-all min-h-[44px] ${
+                      activeTab === 'inbody'
+                        ? 'text-[#3182F6] font-black'
+                        : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
+                    }`}
+                  >
+                    <Scale className="w-4 h-4" />
+                    <span>내 몸 맞춤</span>
+                  </button>
+                </div>
+
+                {/* iPhone 15 Pro Max Home Indicator (140px × 5px, centered, 8px bottom margin) */}
+                <div className="w-full flex justify-center pb-2 pt-0.5">
+                  <div className={`w-[140px] h-[5px] rounded-full ${isDark ? 'bg-slate-600' : 'bg-slate-300'}`} />
+                </div>
               </div>
             </div>
-
-            {/* Scrollable Mobile App Body */}
-            <div className={`flex-1 overflow-y-auto max-h-[780px] px-1 py-3 scrollbar-thin ${
-              isDark ? 'scrollbar-thumb-[#2C2C2E]' : 'scrollbar-thumb-slate-300'
-            }`}>
-              {renderContentSections()}
-            </div>
-
-            {/* Mobile Bottom Navigation Bar (4 Core Tabs) */}
-            <div className={`mt-2 pt-2 border-t grid grid-cols-4 items-center rounded-b-[36px] py-1 transition-colors ${
-              isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-white border-slate-200'
-            }`}>
-              <button
-                onClick={() => setActiveTab('today')}
-                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1.5 transition-all min-h-[44px] ${
-                  activeTab === 'today'
-                    ? 'text-[#3182F6] font-black'
-                    : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
-                }`}
-              >
-                <Zap className={`w-4 h-4 ${activeTab === 'today' ? 'fill-current' : ''}`} />
-                <span>오늘 운동</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('split')}
-                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1.5 transition-all min-h-[44px] ${
-                  activeTab === 'split'
-                    ? 'text-[#3182F6] font-black'
-                    : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
-                }`}
-              >
-                <CalendarDays className="w-4 h-4" />
-                <span>주간 계획</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1.5 transition-all min-h-[44px] ${
-                  activeTab === 'analytics'
-                    ? 'text-[#3182F6] font-black'
-                    : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
-                }`}
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span>성장 분석</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('inbody')}
-                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-bold py-1.5 transition-all min-h-[44px] ${
-                  activeTab === 'inbody'
-                    ? 'text-[#3182F6] font-black'
-                    : isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
-                }`}
-              >
-                <Scale className="w-4 h-4" />
-                <span>내 몸 맞춤</span>
-              </button>
-            </div>
-
-            {/* iOS Bottom Home Bar */}
-            <div className={`w-32 h-1 rounded-full mx-auto mt-2 mb-1 ${isDark ? 'bg-[#2C2C2E]' : 'bg-slate-300'}`} />
           </div>
         ) : (
           /* Desktop Wide Layout */

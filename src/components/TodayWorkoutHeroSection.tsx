@@ -381,8 +381,8 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             : 'bg-white border border-slate-200 shadow-sm text-[#191F28]'
         }`}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div>
+        <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'flex-col sm:flex-row sm:items-center justify-between gap-3'} mb-4`}>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <TdsBadge size="small" variant="weak" color="blue" isDark={isDark}>
                 {todaySplitDay.dayName}요일 운동
@@ -394,7 +394,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                 약 {todaySplitDay.estimatedMinutes}분
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight whitespace-nowrap break-keep">
               오늘 할 운동이에요
             </h1>
             <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
@@ -403,11 +403,11 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
           </div>
 
           {/* Quick Stats: Volume & Completion */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className={`grid ${isMobileView ? 'grid-cols-2 gap-2.5 w-full' : 'grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3 flex-shrink-0'}`}>
             <div className={`px-4 py-2.5 rounded-2xl border ${
               isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-[#F2F4F6] border-slate-200'
             }`}>
-              <div className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+              <div className={`text-[11px] font-semibold truncate ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                 들어 올린 무게
               </div>
               <div className="flex items-baseline gap-1">
@@ -423,7 +423,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             <div className={`px-4 py-2.5 rounded-2xl border ${
               isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-[#F2F4F6] border-slate-200'
             }`}>
-              <div className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+              <div className={`text-[11px] font-semibold truncate ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                 진행 상황
               </div>
               <div className="flex items-baseline gap-1 font-mono-num font-black">
@@ -535,9 +535,16 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className={`text-xs font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
-                휴식 {currentExercise.restSeconds}초
-              </span>
+              <TdsBadge size="xsmall" variant="weak" color="elephant" isDark={isDark}>
+                {(() => {
+                  const secs = currentExercise.restSeconds;
+                  if (!secs || secs <= 0) return '휴식 없음';
+                  if (secs < 60) return `휴식 ${secs}초`;
+                  const m = Math.floor(secs / 60);
+                  const s = secs % 60;
+                  return s > 0 ? `휴식 ${m}분 ${s}초` : `휴식 ${m}분`;
+                })()}
+              </TdsBadge>
               <button
                 type="button"
                 onClick={() => {
@@ -754,6 +761,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
         }
         variant="primary"
         isDark={isDark}
+        isSimulator={isMobileView}
         onClick={handleSaveTodaySession}
         leftIcon={<Sparkles className="w-4 h-4" />}
       />
