@@ -109,4 +109,37 @@ export class VolumeService {
   static formatKg(val: number): string {
     return `${Math.round(val).toLocaleString()} kg`;
   }
+
+  // ─── RPE (Rate of Perceived Exertion) 유틸리티 ────────────────────────────
+
+  /**
+   * RIR(Reps in Reserve) 계산: RIR = 10 - RPE
+   */
+  static rpeToRIR(rpe: number): number {
+    return Math.max(0, 10 - rpe);
+  }
+
+  /**
+   * RPE 체감 강도 피드백 텍스트 (헬스장 한 손 조작 UX용)
+   */
+  static getRPEFeedback(rpe: number): string {
+    if (rpe >= 10) return '올아웃 🔥';
+    if (rpe >= 9)  return '여유 1개 미만';
+    if (rpe >= 8)  return '여유 1~2개';
+    if (rpe >= 7)  return '여유 3개 내외';
+    if (rpe >= 6)  return '여유 있음';
+    return '';
+  }
+
+  /**
+   * 세션 내 완료된 세트들의 평균 RPE 산출
+   */
+  static getAverageRPE(sets: IExerciseSet[]): number | null {
+    const rpeValues = sets
+      .filter(s => s.completed && s.rpe !== undefined && s.rpe !== null)
+      .map(s => s.rpe as number);
+    if (rpeValues.length === 0) return null;
+    const avg = rpeValues.reduce((sum, r) => sum + r, 0) / rpeValues.length;
+    return Math.round(avg * 10) / 10;
+  }
 }

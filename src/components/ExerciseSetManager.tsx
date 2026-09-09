@@ -8,6 +8,8 @@ import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
 import { TdsBadge, TdsButton } from './tds';
 
+const RPE_OPTIONS = [6, 7, 8, 9, 10];
+
 interface ExerciseSetManagerProps {
   workouts: WorkoutSession[];
   onSaveExerciseSets: (session: WorkoutSession) => void;
@@ -69,6 +71,8 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
     return est > max ? est : max;
   }, 0);
 
+  const avgRPE = VolumeService.getAverageRPE(sets);
+
   const handleAddSet = () => {
     const last = sets[sets.length - 1];
     const newSet: IExerciseSet = {
@@ -115,6 +119,12 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
       setRestSecondsDuration(currentExercise.category === 'legs' || currentExercise.category === 'back' ? 120 : 90);
       setIsRestTimerOpen(true);
     }
+  };
+
+  const handleSetRPE = (setId: string, rpe: number) => {
+    setSets(prev => prev.map(s =>
+      s.id === setId ? { ...s, rpe: s.rpe === rpe ? undefined : rpe } : s
+    ));
   };
 
   const handleSaveToToday = () => {
@@ -198,25 +208,42 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
 
       {/* Summary Badges */}
       <div
-        className={`grid grid-cols-3 gap-3 p-4 rounded-2xl mb-5 transition-colors border ${
+        className={`grid grid-cols-4 gap-3 p-4 rounded-2xl mb-5 transition-colors border ${
           isLight ? 'bg-[#F8F9FA] border-slate-100' : 'bg-[#252528] border-transparent'
         }`}
       >
         <div>
           <div className="text-xs text-slate-400 mb-1">종목 총 볼륨</div>
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold font-mono-num text-[#3182F6]">
+            <span className="text-lg font-bold font-mono-num text-[#3182F6]">
               {VolumeService.formatKg(exerciseVolume)}
             </span>
           </div>
         </div>
         <div>
-          <div className="text-xs text-slate-400 mb-1">최고 추정 1RM</div>
+          <div className="text-xs text-slate-400 mb-1">추정 1RM</div>
           <div className="flex items-baseline gap-1">
-            <span className={`text-xl font-bold font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <span className={`text-lg font-bold font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
               {best1RM}
             </span>
             <span className="text-xs text-slate-400">kg</span>
+          </div>
+        </div>
+        <div>
+          <div className="text-xs text-slate-400 mb-1">평균 RPE</div>
+          <div className="flex items-baseline gap-1">
+            {avgRPE !== null ? (
+              <>
+                <span className={`text-lg font-bold font-mono-num ${
+                  avgRPE >= 9 ? 'text-rose-500' : avgRPE >= 8 ? 'text-amber-500' : 'text-[#3182F6]'
+                }`}>
+                  {avgRPE}
+                </span>
+                <span className="text-xs text-slate-400">/ 10</span>
+              </>
+            ) : (
+              <span className="text-xs text-slate-400">—</span>
+            )}
           </div>
         </div>
         <div className="flex items-center justify-end">
@@ -396,6 +423,44 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* RPE Quick-Chip Row — 세트 완료 후에만 표시 */}
+            {set.completed && (
+              <div className={`mt-3 pt-3 border-t ${isLight ? 'border-slate-100' : 'border-[#333D4B]'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-slate-400 whitespace-nowrap">
+                    RPE
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-1 justify-end">
+                    {RPE_OPTIONS.map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => handleSetRPE(set.id, val)}
+                        className={`min-w-[36px] min-h-[36px] rounded-xl text-xs font-bold transition-all ${
+                          set.rpe === val
+                            ? 'bg-[#3182F6] text-white shadow-sm scale-105'
+                            : isLight
+                            ? 'bg-[#F2F4F6] text-slate-500 hover:bg-slate-200'
+                            : 'bg-[#1C1C1E] text-slate-400 hover:bg-[#333D4B] hover:text-white'
+                        }`}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                    {set.rpe !== undefined && (
+                      <span className={`text-[11px] font-medium ml-1 whitespace-nowrap ${
+                        set.rpe >= 10 ? 'text-rose-500' :
+                        set.rpe >= 8  ? 'text-amber-500' :
+                        'text-[#3182F6]'
+                      }`}>
+                        {VolumeService.getRPEFeedback(set.rpe)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
