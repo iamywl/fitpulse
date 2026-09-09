@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Volume2, VolumeX, Play, Pause } from 'lucide-react';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { ThemeMode } from '../theme/pantone';
+import { TdsBadge, TdsButton } from './tds';
 
 interface RestTimerModalProps {
   isOpen: boolean;
@@ -83,67 +84,60 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        className={`w-full max-w-sm rounded-3xl p-5 shadow-2xl border transition-colors flex flex-col items-center text-center ${
+        className={`w-full max-w-sm rounded-t-[28px] sm:rounded-3xl p-6 shadow-2xl border transition-all flex flex-col items-center text-center ${
           isLight
-            ? 'bg-white border-slate-200 text-slate-900 shadow-slate-200'
-            : 'bg-[#121217] border-[#272732] text-white shadow-2xl'
+            ? 'bg-white border-slate-100 text-slate-900 shadow-slate-300/50'
+            : 'bg-[#1C1C1E] border-[#2C2C2E] text-white shadow-2xl'
         }`}
       >
         {/* Top bar: sound toggle & close */}
-        <div className="w-full flex items-center justify-between mb-2">
+        <div className="w-full flex items-center justify-between mb-3">
           <button
             type="button"
             onClick={toggleMute}
-            className={`p-2 rounded-xl transition-colors ${
-              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#181820] hover:bg-[#23232D] text-slate-300'
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
             }`}
             title={isMuted ? '음소거 해제' : '소리 끄기'}
           >
-            {isMuted ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-[#22C55E]" />}
+            {isMuted ? <VolumeX className="w-4 h-4 text-[#F04452]" /> : <Volume2 className="w-4 h-4 text-[#00BFA5]" />}
           </button>
 
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${
-                isLight ? 'bg-lime-100 text-lime-800' : 'bg-[#D4FF00]/15 text-[#D4FF00] border border-[#D4FF00]/30'
-              }`}
-            >
-              REST TIMER
-            </span>
-          </div>
+          <TdsBadge variant="weak" color="blue" size="small">
+            휴식 시간
+          </TdsBadge>
 
           <button
             type="button"
             onClick={onClose}
-            className={`p-2 rounded-xl transition-colors ${
-              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#181820] hover:bg-[#23232D] text-slate-300'
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
             }`}
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Set Completion Badge */}
+        {/* Set Completion Title */}
         <div className="my-1">
-          <p className={`text-xs font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+          <p className={`text-xs font-semibold ${isLight ? 'text-slate-400' : 'text-slate-400'}`}>
             {exerciseName}
           </p>
-          <h3 className={`text-base font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            #{completedSetNumber}세트 완료! 휴식 시작
+          <h3 className={`text-base font-bold mt-0.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            #{completedSetNumber}세트 완료! 잠시 숨 고를게요 🧘
           </h3>
         </div>
 
-        {/* Big Circular / Boxed Countdown Display */}
-        <div className="my-4 relative w-48 h-48 flex items-center justify-center">
-          {/* Circular SVG progress */}
+        {/* Circular Countdown Display */}
+        <div className="my-5 relative w-44 h-44 flex items-center justify-center">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
             <circle
               cx="50"
               cy="50"
               r="44"
-              className={isLight ? 'stroke-slate-100' : 'stroke-[#1c1c24]'}
+              className={isLight ? 'stroke-slate-100' : 'stroke-[#2C2C2E]'}
               strokeWidth="7"
               fill="transparent"
             />
@@ -151,7 +145,11 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
               cx="50"
               cy="50"
               r="44"
-              className={secondsLeft <= 3 && secondsLeft > 0 ? 'stroke-rose-500 transition-all' : isLight ? 'stroke-lime-600 transition-all' : 'stroke-[#D4FF00] transition-all'}
+              className={
+                secondsLeft <= 3 && secondsLeft > 0
+                  ? 'stroke-[#F04452] transition-all'
+                  : 'stroke-[#3182F6] transition-all'
+              }
               strokeWidth="7"
               strokeDasharray={276.46}
               strokeDashoffset={276.46 - (276.46 * progressPercent) / 100}
@@ -163,29 +161,29 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
           {/* Center Digital Display */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span
-              className={`text-4xl font-black font-mono-num tracking-tight ${
+              className={`text-4xl font-bold font-mono-num tracking-tight ${
                 secondsLeft <= 3 && secondsLeft > 0
-                  ? 'text-rose-500 animate-ping-once'
+                  ? 'text-[#F04452] animate-pulse'
                   : secondsLeft === 0
-                  ? 'text-rose-500 font-extrabold'
+                  ? 'text-[#F04452] font-bold'
                   : isLight ? 'text-slate-900' : 'text-white'
               }`}
             >
               {formatTime(secondsLeft)}
             </span>
-            <span className={`text-[11px] font-bold mt-1 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-              {secondsLeft === 0 ? '다음 세트 준비!' : '휴식 중'}
+            <span className={`text-xs font-medium mt-1 ${isLight ? 'text-slate-400' : 'text-slate-400'}`}>
+              {secondsLeft === 0 ? '다음 세트 시작할 시간이에요!' : '회복 중'}
             </span>
           </div>
         </div>
 
         {/* Quick Adjust Buttons */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-5">
           <button
             type="button"
             onClick={() => handleAdjustTime(-15)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-[#181820] text-slate-300 border-[#272732]'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
             }`}
           >
             -15초
@@ -193,8 +191,8 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
           <button
             type="button"
             onClick={() => handleAdjustTime(15)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-[#181820] text-slate-300 border-[#272732]'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
             }`}
           >
             +15초
@@ -202,45 +200,36 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
           <button
             type="button"
             onClick={() => handleAdjustTime(30)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
-              isLight ? 'bg-lime-50 text-lime-800 border-lime-300' : 'bg-[#181820] text-[#D4FF00] border-[#272732]'
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              isLight ? 'bg-blue-50 text-[#3182F6] hover:bg-blue-100' : 'bg-blue-950/40 text-[#3182F6] hover:bg-blue-900/50'
             }`}
           >
             +30초
           </button>
         </div>
 
-        {/* Bottom Play / Pause / Next Set CTA */}
-        <div className="w-full grid grid-cols-2 gap-2">
-          <button
-            type="button"
+        {/* Bottom Actions */}
+        <div className="w-full grid grid-cols-2 gap-2.5">
+          <TdsButton
+            variant="secondary"
+            size="medium"
+            fullWidth
             onClick={() => setIsRunning(!isRunning)}
-            className={`py-3 rounded-2xl text-xs font-black border transition-all flex items-center justify-center gap-1.5 min-h-[44px] ${
-              isLight
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
-                : 'bg-[#181820] hover:bg-[#23232D] text-white border-[#272732]'
-            }`}
           >
-            {isRunning ? (
-              <>
-                <Pause className="w-4 h-4" />
-                <span>일시정지</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4" />
-                <span>계속 진행</span>
-              </>
-            )}
-          </button>
+            <div className="flex items-center justify-center gap-1.5">
+              {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              <span>{isRunning ? '일시정지' : '계속하기'}</span>
+            </div>
+          </TdsButton>
 
-          <button
-            type="button"
+          <TdsButton
+            variant="primary"
+            size="medium"
+            fullWidth
             onClick={onClose}
-            className="py-3 rounded-2xl text-xs font-black bg-[#D4FF00] hover:bg-[#C5EB00] text-black shadow-md shadow-[#D4FF00]/25 active:scale-95 transition-all flex items-center justify-center gap-1.5 min-h-[44px]"
           >
             <span>다음 세트 시작</span>
-          </button>
+          </TdsButton>
         </div>
       </div>
     </div>

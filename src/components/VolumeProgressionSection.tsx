@@ -2,22 +2,22 @@ import React, { useState, useMemo } from 'react';
 import { WorkoutSession } from '../models/fitness';
 import { VolumeService } from '../services/calculator/VolumeService';
 import { ArrowUpRight, ArrowDownRight, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
+import { TdsBadge } from './tds/TdsBadge';
+import { TdsButton } from './tds/TdsButton';
 import confetti from 'canvas-confetti';
-
-import { ThemeMode } from '../theme/pantone';
 
 interface VolumeProgressionSectionProps {
   workouts: WorkoutSession[];
   isMobileView?: boolean;
-  themeMode?: ThemeMode;
+  themeMode?: 'dark' | 'light';
 }
 
 export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> = ({
   workouts,
   isMobileView = false,
-  themeMode = 'dark',
+  themeMode = 'light',
 }) => {
-  const isLight = themeMode === 'light';
+  const isDark = themeMode === 'dark';
   const [filterSameRoutine, setFilterSameRoutine] = useState<boolean>(true);
 
   const sortedWorkouts = useMemo(() => {
@@ -71,25 +71,25 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
       particleCount: 80,
       spread: 70,
       origin: { y: 0.6 },
-      colors: ['#D4FF00', '#38BDF8', '#FFFFFF']
+      colors: ['#3182F6', '#00BFA5', '#00C73C', '#FF9F00']
     });
   };
 
   if (!currentSession || !previousSession || !comparison) {
     return (
       <div
-        className={`border rounded-3xl p-6 text-center transition-colors ${
-          isLight
-            ? 'bg-white border-slate-200 text-slate-700 shadow-sm'
-            : 'bg-[#121217] border-[#23232D] text-slate-300 shadow-xl'
+        className={`rounded-3xl p-6 text-center transition-all ${
+          isDark
+            ? 'bg-[#1C1C1E] border border-[#2C2C2E] text-white'
+            : 'bg-white border border-slate-200 shadow-sm text-[#191F28]'
         }`}
       >
-        <Zap className="w-8 h-8 mx-auto mb-2 text-[#FFB703] opacity-80" />
-        <p className={`text-sm font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
-          볼륨 비교를 위해 최소 2개 이상의 운동 기록이 필요합니다.
+        <Zap className="w-8 h-8 mx-auto mb-2 text-[#3182F6]" />
+        <p className="text-sm font-black">
+          성장 분석을 위해 최소 2개 이상의 운동 기록이 필요해요
         </p>
-        <p className={`text-xs mt-1 max-w-md mx-auto ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-          오늘 운동을 완료하거나, 상단의 <strong>[샘플]</strong> 버튼을 누르면 즉시 1개월 치 데이터와 점진적 과부하 그래프를 체험할 수 있습니다.
+        <p className={`text-xs mt-1 max-w-md mx-auto ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+          오늘 운동을 완료하거나, 상단의 <strong>[샘플]</strong> 버튼을 누르면 직전 세션 대비 점진적 과부하 리포트를 바로 체험할 수 있어요.
         </p>
       </div>
     );
@@ -101,50 +101,58 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
 
   return (
     <div
-      className={`border rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden transition-colors ${
-        isLight
-          ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100'
-          : 'bg-[#121217] border-[#272732] text-white shadow-2xl'
+      className={`rounded-3xl p-4 sm:p-6 transition-all ${
+        isDark
+          ? 'bg-[#1C1C1E] border border-[#2C2C2E] text-white'
+          : 'bg-white border border-slate-200 shadow-sm text-[#191F28]'
       }`}
     >
-      {/* Subtle Glow */}
-      {comparison.isOverload && !isLight && (
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4FF00]/10 rounded-full blur-3xl pointer-events-none" />
-      )}
-
       {/* Header */}
-      <div className={`flex ${isMobileView ? 'flex-col' : 'flex-col sm:flex-row sm:items-center'} justify-between gap-3 mb-5 relative z-10`}>
+      <div className={`flex ${isMobileView ? 'flex-col' : 'flex-col sm:flex-row sm:items-center'} justify-between gap-3 mb-5`}>
         <div>
-          <div className="flex items-center gap-2">
-            <Zap className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
-            <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              점진적 과부하 볼륨 분석
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="w-5 h-5 text-[#3182F6]" />
+            <h2 className="text-lg sm:text-xl font-black tracking-tight">
+              {comparison.isOverload
+                ? `지난번보다 ${comparison.percentDelta.toFixed(1)}% 더 들었어요! 대단해요 👏`
+                : `지난번보다 조금 덜 들었지만 충분히 잘하셨어요`}
             </h2>
           </div>
+          <p className={`text-xs ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+            직전 세션 대비 무게와 반복수를 비교하여 과부하를 측정해요
+          </p>
         </div>
 
         {/* Filter Toggle */}
         <div
-          className={`flex items-center gap-1.5 self-start p-1 rounded-xl border transition-colors ${
-            isLight ? 'bg-slate-100 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'
+          className={`flex items-center gap-1 self-start p-1 rounded-2xl transition-colors ${
+            isDark ? 'bg-[#101012] border border-[#2C2C2E]' : 'bg-[#F2F4F6]'
           }`}
         >
           <button
             onClick={() => setFilterSameRoutine(true)}
-            className={`px-3 py-1 text-xs font-black rounded-lg transition-all ${
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
               filterSameRoutine
-                ? 'bg-[#D4FF00] text-black shadow-sm'
-                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                ? isDark
+                  ? 'bg-[#2C2D33] text-white shadow-sm font-black'
+                  : 'bg-white text-[#191F28] shadow-sm font-black'
+                : isDark
+                ? 'text-[#8B95A1] hover:text-white'
+                : 'text-[#6B7684] hover:text-[#191F28]'
             }`}
           >
             동일 부위 비교
           </button>
           <button
             onClick={() => setFilterSameRoutine(false)}
-            className={`px-3 py-1 text-xs font-black rounded-lg transition-all ${
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
               !filterSameRoutine
-                ? 'bg-[#D4FF00] text-black shadow-sm'
-                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                ? isDark
+                  ? 'bg-[#2C2D33] text-white shadow-sm font-black'
+                  : 'bg-white text-[#191F28] shadow-sm font-black'
+                : isDark
+                ? 'text-[#8B95A1] hover:text-white'
+                : 'text-[#6B7684] hover:text-[#191F28]'
             }`}
           >
             직전 세션 비교
@@ -153,106 +161,87 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
       </div>
 
       {/* Hero Stats Card */}
-      <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-12'} gap-4 mb-5 relative z-10`}>
+      <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-12'} gap-4 mb-5`}>
         {/* Main Growth Metric Card */}
         <div
-          className={`${isMobileView ? '' : 'md:col-span-5'} border rounded-2xl p-4 flex flex-col justify-between transition-colors ${
-            isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'
+          className={`${isMobileView ? '' : 'md:col-span-5'} rounded-2xl p-4 flex flex-col justify-between transition-colors ${
+            isDark ? 'bg-[#101012] border border-[#2C2C2E]' : 'bg-[#F2F4F6] border border-slate-200'
           }`}
         >
           <div>
-            <span className={`text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              총 볼륨 성장률
+            <span className={`text-xs font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+              볼륨 성장량
             </span>
             <div className="flex items-baseline flex-wrap gap-2 mt-1.5">
               <div className="flex items-baseline gap-1">
                 <span
                   className={`text-2xl sm:text-3xl font-black font-mono-num tracking-tight ${
-                    comparison.isOverload
-                      ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
-                      : isLight ? 'text-rose-600' : 'text-[#FF3B56]'
+                    comparison.isOverload ? 'text-[#00C73C]' : 'text-[#F04452]'
                   }`}
                 >
                   {comparison.volumeDelta > 0
                     ? `+${comparison.volumeDelta.toLocaleString()}`
                     : comparison.volumeDelta.toLocaleString()}
                 </span>
-                <span className={`text-sm font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>kg</span>
+                <span className={`text-sm font-bold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>kg</span>
               </div>
-              <div
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black ${
-                  comparison.isOverload
-                    ? 'bg-[#D4FF00] text-black shadow-sm'
-                    : 'bg-[#FF3B56] text-white shadow-sm'
-                }`}
+              <TdsBadge
+                size="small"
+                variant="fill"
+                color={comparison.isOverload ? 'green' : 'red'}
+                icon={comparison.isOverload ? <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" /> : <ArrowDownRight className="w-3.5 h-3.5 stroke-[3]" />}
               >
-                {comparison.isOverload ? (
-                  <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" />
-                ) : (
-                  <ArrowDownRight className="w-3.5 h-3.5 stroke-[3]" />
-                )}
-                <span>
-                  {comparison.percentDelta > 0
-                    ? `+${comparison.percentDelta.toFixed(1)}%`
-                    : `${comparison.percentDelta.toFixed(1)}%`}
-                </span>
-              </div>
+                {comparison.percentDelta > 0
+                  ? `+${comparison.percentDelta.toFixed(1)}%`
+                  : `${comparison.percentDelta.toFixed(1)}%`}
+              </TdsBadge>
             </div>
           </div>
 
-          <div className={`mt-4 pt-3 border-t flex items-center justify-between gap-2 ${isLight ? 'border-slate-200' : 'border-[#1F1F2A]'}`}>
+          <div className={`mt-4 pt-3 border-t flex items-center justify-between gap-2 ${
+            isDark ? 'border-[#2C2C2E]' : 'border-slate-200'
+          }`}>
             {comparison.isOverload ? (
-              <div className={`flex items-center gap-1.5 text-xs font-black ${isLight ? 'text-lime-800' : 'text-[#D4FF00]'}`}>
-                <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
-                <span>점진적 과부하 달성! (근성장 자극 성공)</span>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#00C73C]">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[#00C73C]" />
+                <span>점진적 과부하 달성!</span>
               </div>
             ) : (
-              <div className={`flex items-center gap-1.5 text-xs font-black ${isLight ? 'text-rose-700' : 'text-[#FF3B56]'}`}>
-                <AlertCircle className="w-4 h-4 text-[#FF3B56] flex-shrink-0" />
-                <span>볼륨 유지 또는 디로딩(회복) 구간</span>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#F04452]">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-[#F04452]" />
+                <span>볼륨 유지 또는 디로드 구간</span>
               </div>
             )}
             {comparison.isOverload && (
-              <button
-                onClick={triggerCelebrate}
-                className={`text-xs px-2.5 py-1 rounded-xl font-black border transition-all flex items-center gap-1 flex-shrink-0 ${
-                  isLight
-                    ? 'bg-lime-50 text-lime-800 border-lime-300 hover:bg-lime-100'
-                    : 'bg-[#D4FF00]/15 hover:bg-[#D4FF00]/25 text-[#D4FF00] border-[#D4FF00]/30'
-                }`}
-              >
-                🎉 축하
-              </button>
+              <TdsButton size="small" variant="weak" isDark={isDark} onClick={triggerCelebrate}>
+                🎉 축하하기
+              </TdsButton>
             )}
           </div>
         </div>
 
         {/* Visual Progress Bars Comparison */}
         <div
-          className={`${isMobileView ? '' : 'md:col-span-7'} border rounded-2xl p-4 flex flex-col justify-center gap-3.5 transition-colors ${
-            isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'
+          className={`${isMobileView ? '' : 'md:col-span-7'} rounded-2xl p-4 flex flex-col justify-center gap-4 transition-colors ${
+            isDark ? 'bg-[#101012] border border-[#2C2C2E]' : 'bg-[#F2F4F6] border border-slate-200'
           }`}
         >
           {/* Current Session Bar */}
           <div>
             <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className={`font-extrabold flex items-center gap-1.5 truncate max-w-[200px] ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isLight ? 'bg-lime-600' : 'bg-[#D4FF00] shadow-[0_0_6px_#D4FF00]'}`} />
-                이번 세션 ({currentSession.date.slice(5)})
+              <span className="font-bold flex items-center gap-1.5 truncate max-w-[200px]">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#3182F6]" />
+                이번 운동 ({currentSession.date.slice(5)})
               </span>
-              <span className={`font-mono-num font-black text-sm ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
+              <span className="font-mono-num font-black text-sm text-[#3182F6]">
                 {VolumeService.formatKg(comparison.currentVolume)}
               </span>
             </div>
-            <div className={`h-3.5 w-full rounded-full overflow-hidden p-0.5 border ${
-              isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#181820] border-[#23232D]'
+            <div className={`h-3 w-full rounded-full overflow-hidden ${
+              isDark ? 'bg-[#2C2C2E]' : 'bg-white'
             }`}>
               <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  isLight
-                    ? 'bg-gradient-to-r from-lime-500 to-green-600'
-                    : 'bg-gradient-to-r from-[#A3E635] to-[#D4FF00] shadow-[0_0_10px_rgba(212,255,0,0.5)]'
-                }`}
+                className="h-full rounded-full bg-[#3182F6] transition-all duration-700"
                 style={{ width: `${currBarWidth}%` }}
               />
             </div>
@@ -261,19 +250,23 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
           {/* Previous Session Bar */}
           <div>
             <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className={`font-bold flex items-center gap-1.5 truncate max-w-[200px] ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isLight ? 'bg-slate-400' : 'bg-slate-600'}`} />
-                지난 세션 ({previousSession.date.slice(5)})
+              <span className={`font-medium flex items-center gap-1.5 truncate max-w-[200px] ${
+                isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'
+              }`}>
+                <span className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-[#6B7684]' : 'bg-slate-400'}`} />
+                지난 운동 ({previousSession.date.slice(5)})
               </span>
-              <span className={`font-mono-num font-bold text-sm ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+              <span className="font-mono-num font-bold text-sm">
                 {VolumeService.formatKg(comparison.previousVolume)}
               </span>
             </div>
-            <div className={`h-3.5 w-full rounded-full overflow-hidden p-0.5 border ${
-              isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#181820] border-[#23232D]'
+            <div className={`h-3 w-full rounded-full overflow-hidden ${
+              isDark ? 'bg-[#2C2C2E]' : 'bg-white'
             }`}>
               <div
-                className={`h-full rounded-full transition-all duration-700 ${isLight ? 'bg-slate-400' : 'bg-slate-600'}`}
+                className={`h-full rounded-full transition-all duration-700 ${
+                  isDark ? 'bg-[#6B7684]' : 'bg-slate-400'
+                }`}
                 style={{ width: `${prevBarWidth}%` }}
               />
             </div>
@@ -283,41 +276,40 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
 
       {/* Exercise-by-Exercise Breakdown */}
       <div>
-        <h3 className={`text-xs font-black uppercase tracking-wider mb-2.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-          종목별 세부 볼륨 증감 내역
+        <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+          종목별 세부 증감 내역
         </h3>
 
         <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'} gap-2.5`}>
           {comparison.exerciseDiffs.map(ex => (
             <div
               key={ex.exerciseName}
-              className={`border rounded-xl p-3 transition-all ${
-                isLight
-                  ? 'bg-slate-50 border-slate-200 hover:border-slate-300 shadow-sm'
-                  : 'bg-[#0A0A0E] border-[#23232D] hover:border-slate-600'
+              className={`rounded-2xl p-3.5 border transition-all ${
+                isDark
+                  ? 'bg-[#101012] border-[#2C2C2E]'
+                  : 'bg-white border-slate-200 shadow-sm'
               }`}
             >
               <div className="flex justify-between items-center gap-2 mb-2">
-                <span className={`font-extrabold text-xs sm:text-sm truncate max-w-[200px] ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <span className="font-bold text-sm truncate max-w-[180px]">
                   {ex.exerciseName}
                 </span>
-                <span
-                  className={`text-xs font-black font-mono-num px-2 py-0.5 rounded-full flex-shrink-0 ${
-                    ex.diff > 0
-                      ? 'bg-[#D4FF00] text-black shadow-sm'
-                      : ex.diff < 0
-                      ? 'bg-[#FF3B56] text-white shadow-sm'
-                      : isLight ? 'bg-slate-200 text-slate-700' : 'bg-[#181820] text-slate-400'
-                  }`}
+                <TdsBadge
+                  size="small"
+                  variant={ex.diff !== 0 ? 'fill' : 'weak'}
+                  color={ex.diff > 0 ? 'green' : ex.diff < 0 ? 'red' : 'elephant'}
+                  isDark={isDark}
                 >
                   {ex.diff > 0 ? `+${ex.diff} kg` : `${ex.diff} kg`}
-                </span>
+                </TdsBadge>
               </div>
 
-              <div className={`flex items-center justify-between text-[11px] pt-1.5 border-t ${isLight ? 'border-slate-200 text-slate-500' : 'border-[#1F1F2A] text-slate-400'}`}>
-                <span>지난번: <strong className={`font-mono-num ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{VolumeService.formatKg(ex.prevVol)}</strong></span>
-                <span className={isLight ? 'text-slate-400 font-bold' : 'text-slate-600 font-bold'}>→</span>
-                <span>이번: <strong className={`font-mono-num ${isLight ? 'text-lime-700 font-bold' : 'text-[#D4FF00]'}`}>{VolumeService.formatKg(ex.currVol)}</strong></span>
+              <div className={`flex items-center justify-between text-xs pt-2 border-t ${
+                isDark ? 'border-[#2C2C2E] text-[#8B95A1]' : 'border-slate-100 text-[#6B7684]'
+              }`}>
+                <span>지난번: <strong className="font-mono-num">{VolumeService.formatKg(ex.prevVol)}</strong></span>
+                <span className="text-[#8B95A1]">→</span>
+                <span>이번: <strong className={`font-mono-num ${ex.diff >= 0 ? 'text-[#00C73C]' : 'text-[#F04452]'}`}>{VolumeService.formatKg(ex.currVol)}</strong></span>
               </div>
             </div>
           ))}
@@ -326,4 +318,3 @@ export const VolumeProgressionSection: React.FC<VolumeProgressionSectionProps> =
     </div>
   );
 };
-

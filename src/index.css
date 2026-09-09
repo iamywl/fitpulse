@@ -3,54 +3,60 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-  color-scheme: dark light;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', system-ui, Roboto, sans-serif;
+  color-scheme: light dark;
 
-  /* Default Dark Mode CSS Variables */
-  --fp-bg-base: #09090B;
-  --fp-surface-card: #111115;
-  --fp-surface-hover: #18181F;
-  --fp-surface-elevated: #1F1F27;
-  --fp-border-subtle: #272732;
-  --fp-border-strong: #3F3F50;
-  --fp-text-primary: #FFFFFF;
-  --fp-text-secondary: #94A3B8;
-  --fp-text-muted: #64748B;
-  --fp-accent-volt: #D4FF00;
-  --fp-accent-cyan: #38BDF8;
-  --fp-accent-crimson: #FF334B;
+  /* Default Light Mode CSS Variables (TDS Mobile Clean White & Toss Slate) */
+  --fp-bg-base: #F2F4F6;
+  --fp-surface-card: #FFFFFF;
+  --fp-surface-hover: #EAECEF;
+  --fp-surface-elevated: #FFFFFF;
+  --fp-border-subtle: #E5E8EB;
+  --fp-border-strong: #D1D6DB;
+  --fp-text-primary: #191F28;
+  --fp-text-secondary: #4E5968;
+  --fp-text-muted: #8B95A1;
+  --fp-accent-blue: #3182F6;
+  --fp-accent-teal: #00BFA5;
+  --fp-accent-green: #00C73C;
+  --fp-accent-red: #F04452;
+  --fp-accent-yellow: #FF9F00;
 }
 
 html.light, body.light {
   color-scheme: light;
-  --fp-bg-base: #FFFFFF;
-  --fp-surface-card: #F8FAFC;
-  --fp-surface-hover: #F1F5F9;
+  --fp-bg-base: #F2F4F6;
+  --fp-surface-card: #FFFFFF;
+  --fp-surface-hover: #EAECEF;
   --fp-surface-elevated: #FFFFFF;
-  --fp-border-subtle: #E2E8F0;
-  --fp-border-strong: #CBD5E1;
-  --fp-text-primary: #0F172A;
-  --fp-text-secondary: #334155;
-  --fp-text-muted: #64748B;
-  --fp-accent-volt: #3F6212;
-  --fp-accent-cyan: #0284C7;
-  --fp-accent-crimson: #DC2626;
+  --fp-border-subtle: #E5E8EB;
+  --fp-border-strong: #D1D6DB;
+  --fp-text-primary: #191F28;
+  --fp-text-secondary: #4E5968;
+  --fp-text-muted: #8B95A1;
+  --fp-accent-blue: #3182F6;
+  --fp-accent-teal: #00BFA5;
+  --fp-accent-green: #00C73C;
+  --fp-accent-red: #F04452;
+  --fp-accent-yellow: #FF9F00;
 }
 
 html.dark, body.dark {
   color-scheme: dark;
-  --fp-bg-base: #09090B;
-  --fp-surface-card: #111115;
-  --fp-surface-hover: #18181F;
-  --fp-surface-elevated: #1F1F27;
-  --fp-border-subtle: #272732;
-  --fp-border-strong: #3F3F50;
+  --fp-bg-base: #101012;
+  --fp-surface-card: #1C1C1E;
+  --fp-surface-hover: #242529;
+  --fp-surface-elevated: #242529;
+  --fp-border-subtle: #2C2C2E;
+  --fp-border-strong: #3A3B42;
   --fp-text-primary: #FFFFFF;
-  --fp-text-secondary: #94A3B8;
-  --fp-text-muted: #64748B;
-  --fp-accent-volt: #D4FF00;
-  --fp-accent-cyan: #38BDF8;
-  --fp-accent-crimson: #FF334B;
+  --fp-text-secondary: #B0B8C1;
+  --fp-text-muted: #6B7684;
+  --fp-accent-blue: #3182F6;
+  --fp-accent-teal: #00BFA5;
+  --fp-accent-green: #00C73C;
+  --fp-accent-red: #F04452;
+  --fp-accent-yellow: #FF9F00;
 }
 
 body {

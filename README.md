@@ -7,6 +7,26 @@
 
 ## ⚡ 빠른 시작 (Getting Started)
 
+### Option 1. Docker 원클릭 컨테이너 실행 (macOS & Windows 권장)
+
+```bash
+# 1) 프로덕션 Nginx 서빙 (포트 3000 -> http://localhost:3000)
+docker compose up --build -d
+
+# 실행 상태 및 헬스체크 확인
+docker compose ps
+
+# 컨테이너 종료
+docker compose down
+```
+
+```bash
+# 2) 개발용 핫 리로딩(HMR) Vite 서버 컨테이너 (포트 5173 -> http://localhost:5173)
+docker compose --profile dev up dev
+```
+
+### Option 2. 로컬 Node.js 환경 직접 실행
+
 ```bash
 # 로컬 개발 서버 실행 (현재 http://localhost:5173 에서 상시 구동 중)
 npm run dev
@@ -55,9 +75,12 @@ npm run build
 - **마스터 에이전트 지침서**: [`AGENTS.md`](./AGENTS.md) - 에이전트 운영 프로토콜, SOLID 객체지향 표준, 팬톤 2288 C 규격, 도메인 공식
 - **자동 탑재 규칙**: [`.agents/rules/fitpulse_rules.md`](./.agents/rules/fitpulse_rules.md) - Antigravity 시스템 상시 로드 룰
 - **서비스 기능명세서**: [`docs/SPECIFICATION.md`](./docs/SPECIFICATION.md) - v1.2.0 기능 명세 및 유저 저니
+- **실전 사용자 설문지**: [`docs/SURVEY.md`](./docs/SURVEY.md) - 구글 폼/노션 즉시 이식 가능한 실전 설문지 (SUS 10문항, NPS, 현장 UX)
+- **UX 리서치 명세서**: [`docs/USER_RESEARCH_SURVEY.md`](./docs/USER_RESEARCH_SURVEY.md) - PM/디자인/QA 심층 토론 및 사용자 경험 프레임워크
 - **전담 서브에이전트**:
   - `design-agent`: 팬톤 컬러 감수, WCAG 2.1 AAA 명도 대비 검증, 모바일 390px 인체공학적 레이아웃 설계
   - `qa-agent`: 빌드 무결성, 뷰포트 레이아웃 안정성, 볼륨/1RM 수식 검증
+  - `product_research_agent`: 헬스장 유저 저니 분석, 실전 설문 프레임워크 설계 및 PM 액션 플랜 수립
 
 ---
 

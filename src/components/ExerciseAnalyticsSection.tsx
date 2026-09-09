@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { WorkoutSession } from '../models/fitness';
 import { VolumeService } from '../services/calculator/VolumeService';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Trophy, TrendingUp, BarChart3, Activity } from 'lucide-react';
-
+import { Activity } from 'lucide-react';
 import { ThemeMode } from '../theme/pantone';
+import { TdsBadge } from './tds';
 
 interface ExerciseAnalyticsSectionProps {
   workouts: WorkoutSession[];
@@ -123,35 +123,40 @@ export const ExerciseAnalyticsSection: React.FC<ExerciseAnalyticsSectionProps> =
 
   return (
     <div
-      className={`border rounded-3xl p-4 sm:p-6 shadow-xl relative transition-colors ${
+      className={`rounded-3xl p-5 sm:p-7 shadow-sm transition-colors border ${
         isLight
-          ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100'
-          : 'bg-[#121217] border-[#272732] text-white shadow-2xl'
+          ? 'bg-white border-slate-100 text-slate-900 shadow-slate-200/50'
+          : 'bg-[#1C1C1E] border-[#2C2C2E] text-white'
       }`}
     >
       {/* Header & Exercise Selector */}
-      <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'flex-col sm:flex-row sm:items-center sm:justify-between'} gap-3 mb-5`}>
+      <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'flex-col sm:flex-row sm:items-center sm:justify-between'} gap-3 mb-6`}>
         <div>
-          <div className="flex items-center gap-2">
-            <Activity className={`w-5 h-5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
-            <h2 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              종목별 성장 & 1RM 분석
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-[#3182F6]" />
+            </div>
+            <h2 className={`text-lg sm:text-xl font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              운동별로 얼마나 성장했는지 볼까요?
             </h2>
           </div>
+          <p className={`text-xs ml-10 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            꾸준히 기록하면 1RM 추정치와 볼륨이 차트로 쌓여요
+          </p>
         </div>
 
         {/* Dropdown Selector */}
         <div className={`flex items-center gap-2 ${isMobileView ? 'w-full' : ''}`}>
-          <label className={`text-xs font-bold whitespace-nowrap ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>종목:</label>
+          <label className={`text-xs font-semibold whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>종목</label>
           <select
             value={selectedExerciseId}
             onChange={(e) => setSelectedExerciseId(e.target.value)}
             className={`${
               isMobileView ? 'flex-1' : 'min-w-[180px]'
-            } border text-xs sm:text-sm font-black rounded-xl px-3 py-2 outline-none cursor-pointer transition-colors ${
+            } border text-xs sm:text-sm font-bold rounded-xl px-3.5 py-2.5 outline-none cursor-pointer transition-all ${
               isLight
-                ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
-                : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                ? 'bg-[#F2F4F6] border-transparent text-slate-900 focus:bg-white focus:border-[#3182F6]'
+                : 'bg-[#252528] border-transparent text-white focus:border-[#3182F6]'
             }`}
           >
             {availableExercises.map(ex => (
@@ -165,43 +170,56 @@ export const ExerciseAnalyticsSection: React.FC<ExerciseAnalyticsSectionProps> =
 
       {/* PR Cards Row: 2x2 on Mobile, 4 columns on Desktop */}
       {prStats && (
-        <div className={`grid ${isMobileView ? 'grid-cols-2 gap-2.5' : 'grid-cols-2 sm:grid-cols-4 gap-3'} mb-5`}>
-          <div className={`border rounded-2xl p-3 sm:p-3.5 transition-colors ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
-            <div className={`flex items-center gap-1 text-[11px] font-bold mb-1 truncate ${isLight ? 'text-amber-700' : 'text-[#FFB703]'}`}>
-              <Trophy className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>최고 1RM (PR)</span>
+        <div className={`grid ${isMobileView ? 'grid-cols-2 gap-2.5' : 'grid-cols-2 sm:grid-cols-4 gap-3'} mb-6`}>
+          <div className={`rounded-2xl p-4 transition-colors ${isLight ? 'bg-[#F8F9FA] border border-slate-100' : 'bg-[#252528] border border-transparent'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>최고 기록 (PR)</span>
+              <TdsBadge variant="weak" color="yellow" size="xsmall">PR</TdsBadge>
             </div>
-            <div className={`text-xl font-black font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {prStats.max1RM} <span className="text-xs font-normal text-slate-400">kg</span>
-            </div>
-          </div>
-
-          <div className={`border rounded-2xl p-3 sm:p-3.5 transition-colors ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
-            <div className={`flex items-center gap-1 text-[11px] font-bold mb-1 truncate ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
-              <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>1RM 성장폭</span>
-            </div>
-            <div className={`text-xl font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
-              {prStats.growth1RM >= 0 ? `+${prStats.growth1RM}` : prStats.growth1RM}{' '}
+            <div className="flex items-baseline gap-1">
+              <span className={`text-2xl font-bold font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {prStats.max1RM}
+              </span>
               <span className="text-xs font-normal text-slate-400">kg</span>
             </div>
           </div>
 
-          <div className={`border rounded-2xl p-3 sm:p-3.5 transition-colors ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
-            <div className={`flex items-center gap-1 text-[11px] font-bold mb-1 truncate ${isLight ? 'text-sky-700' : 'text-[#38BDF8]'}`}>
-              <BarChart3 className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>종목 누적 볼륨</span>
+          <div className={`rounded-2xl p-4 transition-colors ${isLight ? 'bg-[#F8F9FA] border border-slate-100' : 'bg-[#252528] border border-transparent'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>1RM 성장</span>
+              <TdsBadge variant="weak" color="blue" size="xsmall">성장</TdsBadge>
             </div>
-            <div className={`text-xl font-black font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {(prStats.totalVol / 1000).toFixed(1)}{' '}
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold font-mono-num text-[#3182F6]">
+                {prStats.growth1RM >= 0 ? `+${prStats.growth1RM}` : prStats.growth1RM}
+              </span>
+              <span className="text-xs font-normal text-slate-400">kg</span>
+            </div>
+          </div>
+
+          <div className={`rounded-2xl p-4 transition-colors ${isLight ? 'bg-[#F8F9FA] border border-slate-100' : 'bg-[#252528] border border-transparent'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>종목 누적 볼륨</span>
+              <TdsBadge variant="weak" color="teal" size="xsmall">누적</TdsBadge>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className={`text-2xl font-bold font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {(prStats.totalVol / 1000).toFixed(1)}
+              </span>
               <span className="text-xs font-normal text-slate-400">t</span>
             </div>
           </div>
 
-          <div className={`border rounded-2xl p-3 sm:p-3.5 transition-colors ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
-            <div className={`text-[11px] font-bold mb-1 truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>최근 추정 1RM</div>
-            <div className={`text-xl font-black font-mono-num ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-              {prStats.latest1RM} <span className="text-xs font-normal text-slate-400">kg</span>
+          <div className={`rounded-2xl p-4 transition-colors ${isLight ? 'bg-[#F8F9FA] border border-slate-100' : 'bg-[#252528] border border-transparent'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>최근 추정 1RM</span>
+              <TdsBadge variant="weak" color="elephant" size="xsmall">최근</TdsBadge>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className={`text-2xl font-bold font-mono-num ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                {prStats.latest1RM}
+              </span>
+              <span className="text-xs font-normal text-slate-400">kg</span>
             </div>
           </div>
         </div>
@@ -210,30 +228,30 @@ export const ExerciseAnalyticsSection: React.FC<ExerciseAnalyticsSectionProps> =
       {/* Dual Charts */}
       <div className={`grid ${isMobileView ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-5'}`}>
         {/* 1RM Trend Chart */}
-        <div className={`border rounded-2xl p-3.5 transition-colors ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className={`text-xs font-black flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              <span className={`w-2 h-2 rounded-full ${isLight ? 'bg-lime-600' : 'bg-[#D4FF00] shadow-[0_0_6px_#D4FF00]'}`} />
+        <div className={`rounded-2xl p-4 sm:p-5 transition-colors ${isLight ? 'bg-[#F8F9FA] border border-slate-100' : 'bg-[#252528] border border-transparent'}`}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#3182F6]" />
               추정 1RM 성장 곡선 (Epley)
             </h3>
-            <span className={`text-[10px] font-mono-num ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>kg 단위</span>
+            <span className={`text-xs font-mono-num ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>kg 단위</span>
           </div>
 
-          <div className="h-44 w-full">
+          <div className="h-48 w-full">
             {exerciseData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={exerciseData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#E2E8F0' : '#1c1c24'} vertical={false} />
-                  <XAxis dataKey="date" stroke={isLight ? '#64748B' : '#64748b'} fontSize={10} tickLine={false} />
-                  <YAxis stroke={isLight ? '#64748B' : '#64748b'} fontSize={10} domain={['dataMin - 5', 'dataMax + 5']} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#E5E8EB' : '#333D4B'} vertical={false} />
+                  <XAxis dataKey="date" stroke={isLight ? '#8B95A1' : '#6B7684'} fontSize={11} tickLine={false} />
+                  <YAxis stroke={isLight ? '#8B95A1' : '#6B7684'} fontSize={11} domain={['dataMin - 5', 'dataMax + 5']} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: isLight ? '#FFFFFF' : '#0A0A0E',
-                      borderColor: isLight ? '#E2E8F0' : '#23232D',
-                      borderRadius: '0.75rem',
-                      fontSize: '11px',
-                      color: isLight ? '#0F172A' : '#fff',
-                      boxShadow: isLight ? '0 10px 15px -3px rgba(0,0,0,0.1)' : undefined,
+                      backgroundColor: isLight ? '#FFFFFF' : '#1C1C1E',
+                      borderColor: isLight ? '#E5E8EB' : '#333D4B',
+                      borderRadius: '1rem',
+                      fontSize: '12px',
+                      color: isLight ? '#191F28' : '#FFFFFF',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
                     }}
                     formatter={(val: number) => [`${val} kg`, '추정 1RM']}
                     labelFormatter={(label) => `날짜: ${label}`}
@@ -241,56 +259,56 @@ export const ExerciseAnalyticsSection: React.FC<ExerciseAnalyticsSectionProps> =
                   <Line
                     type="monotone"
                     dataKey="estimated1RM"
-                    stroke={isLight ? '#4D7C0F' : '#D4FF00'}
-                    strokeWidth={2.5}
-                    dot={{ fill: isLight ? '#4D7C0F' : '#D4FF00', r: 3.5, strokeWidth: 1.5, stroke: isLight ? '#FFFFFF' : '#0A0A0E' }}
-                    activeDot={{ r: 5, fill: isLight ? '#0F172A' : '#FFFFFF' }}
+                    stroke="#3182F6"
+                    strokeWidth={3}
+                    dot={{ fill: '#3182F6', r: 4, strokeWidth: 2, stroke: isLight ? '#FFFFFF' : '#1C1C1E' }}
+                    activeDot={{ r: 6, fill: '#1B64DA', stroke: '#FFFFFF', strokeWidth: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                기록 데이터 없음
+                아직 기록된 운동 데이터가 없어요
               </div>
             )}
           </div>
         </div>
 
         {/* Volume per Session Bar Chart */}
-        <div className={`border rounded-2xl p-3.5 transition-colors ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className={`text-xs font-black flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              <span className={`w-2 h-2 rounded-full ${isLight ? 'bg-sky-600' : 'bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]'}`} />
+        <div className={`rounded-2xl p-4 sm:p-5 transition-colors ${isLight ? 'bg-[#F8F9FA] border border-slate-100' : 'bg-[#252528] border border-transparent'}`}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00BFA5]" />
               세션별 해당 종목 총 볼륨
             </h3>
-            <span className={`text-[10px] font-mono-num ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>kg 단위</span>
+            <span className={`text-xs font-mono-num ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>kg 단위</span>
           </div>
 
-          <div className="h-44 w-full">
+          <div className="h-48 w-full">
             {exerciseData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={exerciseData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#E2E8F0' : '#1c1c24'} vertical={false} />
-                  <XAxis dataKey="date" stroke={isLight ? '#64748B' : '#64748b'} fontSize={10} tickLine={false} />
-                  <YAxis stroke={isLight ? '#64748B' : '#64748b'} fontSize={10} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#E5E8EB' : '#333D4B'} vertical={false} />
+                  <XAxis dataKey="date" stroke={isLight ? '#8B95A1' : '#6B7684'} fontSize={11} tickLine={false} />
+                  <YAxis stroke={isLight ? '#8B95A1' : '#6B7684'} fontSize={11} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: isLight ? '#FFFFFF' : '#0A0A0E',
-                      borderColor: isLight ? '#E2E8F0' : '#23232D',
-                      borderRadius: '0.75rem',
-                      fontSize: '11px',
-                      color: isLight ? '#0F172A' : '#fff',
-                      boxShadow: isLight ? '0 10px 15px -3px rgba(0,0,0,0.1)' : undefined,
+                      backgroundColor: isLight ? '#FFFFFF' : '#1C1C1E',
+                      borderColor: isLight ? '#E5E8EB' : '#333D4B',
+                      borderRadius: '1rem',
+                      fontSize: '12px',
+                      color: isLight ? '#191F28' : '#FFFFFF',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
                     }}
                     formatter={(val: number) => [`${VolumeService.formatKg(val)}`, '총 볼륨']}
                     labelFormatter={(label) => `날짜: ${label}`}
                   />
-                  <Bar dataKey="volume" fill={isLight ? '#0284C7' : '#38BDF8'} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="volume" fill="#00BFA5" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                기록 데이터 없음
+                아직 기록된 운동 데이터가 없어요
               </div>
             )}
           </div>
@@ -299,4 +317,3 @@ export const ExerciseAnalyticsSection: React.FC<ExerciseAnalyticsSectionProps> =
     </div>
   );
 };
-

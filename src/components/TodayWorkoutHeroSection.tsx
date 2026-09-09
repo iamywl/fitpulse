@@ -6,10 +6,11 @@ import { RoutineService } from '../services/routine/RoutineService';
 import { VolumeService } from '../services/calculator/VolumeService';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
-import { ThemeMode } from '../theme/pantone';
+import { TdsBadge } from './tds/TdsBadge';
+import { TdsButton } from './tds/TdsButton';
+import { TdsBottomCTA } from './tds/TdsBottomCTA';
 import { 
   Check, 
-  Flame, 
   Sparkles, 
   Trash2, 
   ChevronRight, 
@@ -26,7 +27,7 @@ interface TodayWorkoutHeroSectionProps {
   splitList?: IWeeklySplitDay[];
   onUpdateSplit?: (updatedSplit: IWeeklySplitDay[]) => void;
   isMobileView?: boolean;
-  themeMode?: ThemeMode;
+  themeMode?: 'dark' | 'light';
   onNavigateTab?: (tab: string) => void;
 }
 
@@ -36,10 +37,10 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
   splitList = DEFAULT_WEEKLY_SPLIT,
   onUpdateSplit,
   isMobileView = false,
-  themeMode = 'dark',
+  themeMode = 'light',
   onNavigateTab,
 }) => {
-  const isLight = themeMode === 'light';
+  const isDark = themeMode === 'dark';
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const currentDayIndex = new Date().getDay(); // 0: Sun, 1: Mon, ...
 
@@ -60,12 +61,10 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
   const [exerciseSetsMap, setExerciseSetsMap] = useState<Record<string, IExerciseSet[]>>(() => {
     const map: Record<string, IExerciseSet[]> = {};
     todaySplitDay.exercises.forEach((ex) => {
-      // If already logged in todayWorkoutSession, load it
       const loggedEx = todayWorkoutSession?.exercises.find(e => e.exerciseId === ex.id || e.exerciseName === ex.name);
       if (loggedEx && loggedEx.sets.length > 0) {
         map[ex.id] = loggedEx.sets;
       } else {
-        // Default sets according to split routine targets
         const defaultWeight = ex.name.includes('데드리프트') ? 100 :
                               ex.name.includes('스쿼트') ? 90 :
                               ex.name.includes('벤치프레스') ? 70 :
@@ -83,7 +82,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
     return map;
   });
 
-  // Keep exerciseSetsMap in sync whenever todaySplitDay changes (e.g. from Routine Builder)
+  // Keep exerciseSetsMap in sync whenever todaySplitDay changes
   useEffect(() => {
     setExerciseSetsMap(prev => {
       const nextMap = { ...prev };
@@ -110,93 +109,101 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
       });
       return nextMap;
     });
-
-    // Reset active index if out of range
-    if (activeExerciseIndex >= todaySplitDay.exercises.length) {
-      setActiveExerciseIndex(0);
-    }
   }, [todaySplitDay, todayWorkoutSession]);
 
-  // Rest Timer State
-  const [isRestTimerOpen, setIsRestTimerOpen] = useState<boolean>(false);
-  const [timerSetNumber, setTimerSetNumber] = useState<number>(1);
-  const [timerExerciseName, setTimerExerciseName] = useState<string>('운동');
-  const [timerRestDuration, setTimerRestDuration] = useState<number>(90);
-
-  // Exercise Picker Modal & Muscle Category Filter State
+  // Exercise Picker Modal State
   const [isExercisePickerOpen, setIsExercisePickerOpen] = useState<boolean>(false);
   const [pickerMode, setPickerMode] = useState<'replace' | 'add'>('replace');
   const [selectedMuscleCategory, setSelectedMuscleCategory] = useState<string>('all');
   const [searchExerciseQuery, setSearchExerciseQuery] = useState<string>('');
 
-  const currentExercise: IWeeklySplitExercise | undefined = todaySplitDay.exercises[activeExerciseIndex];
-  const currentSets: IExerciseSet[] = currentExercise ? (exerciseSetsMap[currentExercise.id] || []) : [];
+  // Rest Timer Modal State
+  const [isRestTimerOpen, setIsRestTimerOpen] = useState<boolean>(false);
+  const [timerSetNumber, setTimerSetNumber] = useState<number>(1);
+  const [timerExerciseName, setTimerExerciseName] = useState<string>('운동');
+  const [timerRestDuration, setTimerRestDuration] = useState<number>(90);
 
-  // Filtered exercises from Master Library
+  // Safe active exercise pointer
+  const currentExercise = todaySplitDay.exercises[activeExerciseIndex] || todaySplitDay.exercises[0];
+  const currentSets = currentExercise ? (exerciseSetsMap[currentExercise.id] || []) : [];
+
+  // Filtered exercises for picker modal
   const filteredLibraryExercises = useMemo(() => {
     return MASTER_EXERCISE_LIBRARY.filter(ex => {
       const matchesCategory = selectedMuscleCategory === 'all' || ex.category === selectedMuscleCategory;
-      const matchesQuery = !searchExerciseQuery.trim() || 
-        ex.name.toLowerCase().includes(searchExerciseQuery.toLowerCase()) || 
+      const matchesSearch = !searchExerciseQuery.trim() || 
+        ex.name.toLowerCase().includes(searchExerciseQuery.toLowerCase()) ||
         ex.targetMuscle.toLowerCase().includes(searchExerciseQuery.toLowerCase());
-      return matchesCategory && matchesQuery;
+      return matchesCategory && matchesSearch;
     });
   }, [selectedMuscleCategory, searchExerciseQuery]);
 
-  // Handler for selecting an exercise from library (replace or add)
+  // Handle choosing an exercise from the library
   const handleSelectLibraryExercise = (masterEx: IMasterExercise) => {
-    const defaultWeight = masterEx.category === 'legs' ? 80 :
-                          masterEx.category === 'back' ? 70 :
-                          masterEx.category === 'chest' ? 60 :
-                          masterEx.category === 'shoulders' ? 40 : 25;
-
-    const newSplitEx: IWeeklySplitExercise = {
-      id: `custom-ex-${Date.now()}`,
+    const newRoutineExercise: IWeeklySplitExercise = {
+      id: `ex-${masterEx.id}-${Date.now()}`,
       name: masterEx.name,
-      targetMuscle: masterEx.targetMuscle,
       sets: masterEx.defaultSets,
       reps: masterEx.defaultReps,
+      targetMuscle: masterEx.targetMuscle,
       intensity: masterEx.intensity,
       restSeconds: masterEx.defaultRestSeconds,
-      target1RMPercent: masterEx.target1RMPercent,
-      tip: masterEx.tip,
+      target1RMPercent: 75,
     };
 
-    // Initialize sets for the newly selected exercise
-    const newSets: IExerciseSet[] = Array.from({ length: masterEx.defaultSets }, (_, i) => ({
-      id: `set-${newSplitEx.id}-${i + 1}`,
+    const initialSets: IExerciseSet[] = Array.from({ length: masterEx.defaultSets }, (_, i) => ({
+      id: `set-${newRoutineExercise.id}-${i + 1}`,
       setNumber: i + 1,
-      weight: defaultWeight + (i > 0 ? i * 2.5 : 0),
+      weight: masterEx.name.includes('데드리프트') ? 100 :
+              masterEx.name.includes('스쿼트') ? 90 :
+              masterEx.name.includes('벤치프레스') ? 70 : 40,
       reps: parseInt(masterEx.defaultReps) || 10,
       completed: false,
       isWarmup: i === 0,
     }));
 
-    setExerciseSetsMap(prev => ({
-      ...prev,
-      [newSplitEx.id]: newSets,
-    }));
+    if (pickerMode === 'replace' && currentExercise) {
+      const updatedExercises = [...todaySplitDay.exercises];
+      updatedExercises[activeExerciseIndex] = newRoutineExercise;
 
-    // Update the today's exercises in splitList
-    const updatedTodayExercises = pickerMode === 'replace' && currentExercise
-      ? todaySplitDay.exercises.map((ex, idx) => idx === activeExerciseIndex ? newSplitEx : ex)
-      : [...todaySplitDay.exercises, newSplitEx];
+      const updatedSplitList = splitList.map(d => 
+        d.dayIndex === todaySplitDay.dayIndex ? { ...d, exercises: updatedExercises } : d
+      );
 
-    const updatedSplitDay: IWeeklySplitDay = {
-      ...todaySplitDay,
-      exercises: updatedTodayExercises,
-    };
+      setExerciseSetsMap(prev => {
+        const next = { ...prev };
+        delete next[currentExercise.id];
+        next[newRoutineExercise.id] = initialSets;
+        return next;
+      });
 
-    const updatedFullSplit = splitList.map(d => d.dayIndex === todaySplitDay.dayIndex ? updatedSplitDay : d);
-    RoutineService.saveWeeklySplit(updatedFullSplit);
-    if (onUpdateSplit) {
-      onUpdateSplit(updatedFullSplit);
+      if (onUpdateSplit) {
+        onUpdateSplit(updatedSplitList);
+      } else {
+        RoutineService.saveWeeklySplit(updatedSplitList);
+      }
+    } else if (pickerMode === 'add') {
+      const updatedExercises = [...todaySplitDay.exercises, newRoutineExercise];
+      const updatedSplitList = splitList.map(d => 
+        d.dayIndex === todaySplitDay.dayIndex ? { ...d, exercises: updatedExercises } : d
+      );
+
+      setExerciseSetsMap(prev => ({
+        ...prev,
+        [newRoutineExercise.id]: initialSets,
+      }));
+
+      if (onUpdateSplit) {
+        onUpdateSplit(updatedSplitList);
+      } else {
+        RoutineService.saveWeeklySplit(updatedSplitList);
+      }
+
+      setActiveExerciseIndex(updatedExercises.length - 1);
     }
 
-    if (pickerMode === 'add') {
-      setActiveExerciseIndex(updatedTodayExercises.length - 1);
-    }
     setIsExercisePickerOpen(false);
+    setSearchExerciseQuery('');
   };
 
   // Completed counts across all exercises today
@@ -307,18 +314,18 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
       .filter(log => log.sets.some(s => s.completed));
 
     if (exerciseLogs.length === 0) {
-      alert('완료된 세트가 최소 1개 이상 있어야 오늘 운동을 저장할 수 있습니다.');
+      alert('완료된 세트가 최소 1개 이상 있어야 오늘 운동을 저장할 수 있어요.');
       return;
     }
 
     const newSession: WorkoutSession = {
       id: todayWorkoutSession?.id || `workout-${Date.now()}`,
       date: todayStr,
-      title: `${todaySplitDay.dayName}요일 분할: ${todaySplitDay.title}`,
+      title: `[${todaySplitDay.dayName}요일] ${todaySplitDay.title}`,
       durationMinutes: todaySplitDay.estimatedMinutes,
       exercises: exerciseLogs,
       totalVolume: VolumeService.calculateSessionVolume(exerciseLogs),
-      memo: `점진적 과부하 달성 완료 (${completedExercisesCount}/${totalExercisesCount} 종목 완주)`,
+      memo: `오늘 운동 완료 (${completedExercisesCount}/${totalExercisesCount} 종목 완주)`,
     };
 
     onSaveWorkoutSession(newSession);
@@ -326,7 +333,7 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
       particleCount: 100,
       spread: 80,
       origin: { y: 0.6 },
-      colors: ['#D4FF00', '#38BDF8', '#FFFFFF']
+      colors: ['#3182F6', '#00BFA5', '#00C73C', '#FF9F00']
     });
   };
 
@@ -334,28 +341,30 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
   if (todaySplitDay.isRestDay) {
     return (
       <div
-        className={`border rounded-3xl p-6 shadow-2xl text-center transition-colors ${
-          isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#111115] border-[#272732] text-white'
+        className={`rounded-3xl p-6 sm:p-8 text-center transition-all ${
+          isDark ? 'bg-[#1C1C1E] border border-[#2C2C2E] text-white' : 'bg-white border border-slate-200 shadow-sm text-[#191F28]'
         }`}
       >
-        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-4">
-          <Flame className="w-8 h-8" />
+        <div className="w-16 h-16 rounded-3xl bg-[#E8F3FF] dark:bg-[#3182F6]/15 text-[#3182F6] flex items-center justify-center mx-auto mb-4">
+          <Sparkles className="w-8 h-8" />
         </div>
-        <span className="text-[11px] font-black px-3 py-1 rounded-full bg-amber-500/15 text-amber-500 tracking-wider">
-          REST & RECOVERY DAY
-        </span>
-        <h2 className="text-xl font-black mt-3 mb-1">오늘은 근합성 및 회복의 날입니다</h2>
-        <p className={`text-xs max-w-md mx-auto mb-5 ${isLight ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
-          충분한 수면과 단백질 섭취로 신경계와 근섬유를 리셋하세요. 다음 세션에서 더 강력한 중량을 다룰 수 있습니다.
+        <TdsBadge size="medium" variant="weak" color="blue" isDark={isDark} className="mb-3">
+          휴식과 충전의 날
+        </TdsBadge>
+        <h2 className="text-xl sm:text-2xl font-black mt-2 mb-2">오늘은 푹 쉬어가도 좋아요</h2>
+        <p className={`text-sm max-w-md mx-auto mb-6 leading-relaxed ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
+          충분한 수면과 영양 섭취로 몸을 회복해 보세요. 다음 운동 때 더 가볍게 들어 올릴 수 있어요.
         </p>
         <div className="flex justify-center gap-2">
           {onNavigateTab && (
-            <button
+            <TdsButton
+              variant="secondary"
+              size="medium"
+              isDark={isDark}
               onClick={() => onNavigateTab('split')}
-              className="px-4 py-2 rounded-xl text-xs font-black bg-[#D4FF00] text-black shadow-md"
             >
-              전체 주간 분할 루틴 확인하기
-            </button>
+              이번 주 운동 계획 보러가기
+            </TdsButton>
           )}
         </div>
       </div>
@@ -363,75 +372,83 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
   }
 
   return (
-    <div className={`space-y-4 ${isMobileView ? 'px-0' : ''}`}>
+    <div className={`space-y-4 pb-24 ${isMobileView ? 'px-0' : ''}`}>
       {/* 1. Workout Header HUD & Progress Ribbon */}
       <div
-        className={`border rounded-3xl ${isMobileView ? 'p-3.5' : 'p-4 sm:p-5'} shadow-xl transition-colors relative overflow-hidden ${
-          isLight
-            ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100'
-            : 'bg-[#111115] border-[#272732] text-white shadow-2xl'
+        className={`rounded-3xl ${isMobileView ? 'p-4' : 'p-5'} transition-all ${
+          isDark
+            ? 'bg-[#1C1C1E] border border-[#2C2C2E] text-white'
+            : 'bg-white border border-slate-200 shadow-sm text-[#191F28]'
         }`}
       >
-        {/* Top Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-[#D4FF00] to-transparent" />
-
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-[#D4FF00] text-black shadow-sm font-mono-num">
-                TODAY {todaySplitDay.dayName}요일
-              </span>
-              <span className={`text-xs font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <TdsBadge size="small" variant="weak" color="blue" isDark={isDark}>
+                {todaySplitDay.dayName}요일 운동
+              </TdsBadge>
+              <span className={`text-xs font-medium ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                 {todayStr}
               </span>
-              <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-lg border ${
-                isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-[#181820] border-[#272732] text-slate-300'
-              }`}>
-                {todaySplitDay.estimatedMinutes}분 예정
+              <span className={`text-xs font-mono ${isDark ? 'text-[#6B7684]' : 'text-[#8B95A1]'}`}>
+                약 {todaySplitDay.estimatedMinutes}분
               </span>
             </div>
-            <h1 className="text-lg sm:text-xl font-black tracking-tight flex items-center gap-2">
-              <span>{todaySplitDay.title}</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight">
+              오늘 할 운동이에요
             </h1>
+            <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
+              {todaySplitDay.title} · {todaySplitDay.categoryDesc}
+            </p>
           </div>
 
           {/* Quick Stats: Volume & Completion */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <div className={`px-3 py-2 rounded-2xl border min-w-[96px] ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0E0E14] border-[#22222E]'}`}>
-              <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>오늘 누적 볼륨</div>
-              <div className="flex items-baseline gap-1 whitespace-nowrap">
-                <span className={`text-base sm:text-lg font-black font-mono-num tracking-tight ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
+            <div className={`px-4 py-2.5 rounded-2xl border ${
+              isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-[#F2F4F6] border-slate-200'
+            }`}>
+              <div className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                들어 올린 무게
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className={`text-lg sm:text-xl font-black font-mono-num ${isDark ? 'text-white' : 'text-[#191F28]'}`}>
                   {Math.round(todayLiveVolume).toLocaleString()}
                 </span>
-                <span className={`text-xs font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span className={`text-xs font-bold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                   kg
                 </span>
               </div>
             </div>
 
-            <div className={`px-3 py-2 rounded-2xl border min-w-[90px] ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0E0E14] border-[#22222E]'}`}>
-              <div className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>진행률</div>
-              <div className="flex items-baseline gap-1 whitespace-nowrap font-mono-num font-black">
-                <span className={`text-base sm:text-lg ${completedExercisesCount === totalExercisesCount ? 'text-[#22C55E]' : isLight ? 'text-slate-900' : 'text-white'}`}>
+            <div className={`px-4 py-2.5 rounded-2xl border ${
+              isDark ? 'bg-[#101012] border-[#2C2C2E]' : 'bg-[#F2F4F6] border-slate-200'
+            }`}>
+              <div className={`text-[11px] font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                진행 상황
+              </div>
+              <div className="flex items-baseline gap-1 font-mono-num font-black">
+                <span className="text-lg sm:text-xl text-[#3182F6]">
                   {completedExercisesCount}/{totalExercisesCount}
                 </span>
-                <span className="text-xs text-slate-400 font-semibold">({progressPercent}%)</span>
+                <span className={`text-xs font-medium ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                  ({progressPercent}%)
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className={`w-full h-2 rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-[#181820]'}`}>
+        {/* Progress Bar (TDS Blue) */}
+        <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-[#2C2C2E]' : 'bg-[#F2F4F6]'}`}>
           <div 
-            className="h-full bg-[#D4FF00] transition-all duration-300 rounded-full shadow-[0_0_8px_#D4FF00]"
+            className="h-full bg-[#3182F6] transition-all duration-300 rounded-full"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
       </div>
 
       {/* 2. Horizontal Exercise Switcher Carousel + Add/Replace Drawer Trigger */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
         {todaySplitDay.exercises.map((ex, idx) => {
           const sets = exerciseSetsMap[ex.id] || [];
           const isDone = sets.length > 0 && sets.every(s => s.completed);
@@ -441,25 +458,31 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             <button
               key={ex.id}
               onClick={() => setActiveExerciseIndex(idx)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl border text-xs font-black whitespace-nowrap transition-all flex-shrink-0 min-h-[42px] ${
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 select-none min-h-[44px] ${
                 isCurrent
-                  ? 'bg-[#D4FF00] text-black border-[#D4FF00] shadow-sm'
+                  ? 'bg-[#3182F6] text-white shadow-sm font-black'
                   : isDone
-                  ? isLight
-                    ? 'bg-slate-100 border-slate-300 text-slate-400 line-through'
-                    : 'bg-[#121217] border-[#272732] text-slate-500 line-through'
-                  : isLight
-                  ? 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'
-                  : 'bg-[#121217] border-[#23232D] text-slate-300 hover:border-slate-500'
+                  ? isDark
+                    ? 'bg-[#1C1C1E] text-[#6B7684] line-through border border-[#2C2C2E]'
+                    : 'bg-white text-[#8B95A1] line-through border border-slate-200'
+                  : isDark
+                  ? 'bg-[#1C1C1E] text-[#B0B8C1] hover:text-white border border-[#2C2C2E]'
+                  : 'bg-white text-[#4E5968] hover:text-[#191F28] border border-slate-200 shadow-sm'
               }`}
             >
-              <span className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] font-bold ${
-                isCurrent ? 'bg-black text-[#D4FF00]' : isDone ? 'bg-green-500/20 text-green-500' : 'bg-[#23232D] text-slate-300'
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                isCurrent
+                  ? 'bg-white text-[#3182F6]'
+                  : isDone
+                  ? 'bg-[#00C73C] text-white'
+                  : isDark ? 'bg-[#2C2C2E] text-white' : 'bg-[#F2F4F6] text-[#4E5968]'
               }`}>
                 {isDone ? <Check className="w-3 h-3 stroke-[3]" /> : idx + 1}
               </span>
               <span>{ex.name}</span>
-              <span className="text-[10px] opacity-75 font-mono font-normal">({ex.sets}세트)</span>
+              <span className={`text-xs opacity-75 font-normal ${isCurrent ? 'text-white' : ''}`}>
+                ({ex.sets}세트)
+              </span>
             </button>
           );
         })}
@@ -472,49 +495,47 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             setSelectedMuscleCategory('all');
             setIsExercisePickerOpen(true);
           }}
-          className={`flex items-center gap-1 px-3 py-2 rounded-2xl border border-dashed text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[42px] ${
-            isLight
-              ? 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-300'
-              : 'bg-[#121217] hover:bg-[#1A1A22] text-slate-300 border-[#2C2C3A]'
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-dashed text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex-shrink-0 min-h-[44px] ${
+            isDark
+              ? 'bg-[#1C1C1E] hover:bg-[#2C2C2E] text-[#B0B8C1] border-[#3A3B42]'
+              : 'bg-white hover:bg-slate-50 text-[#4E5968] border-slate-300'
           }`}
-          title="오늘 운동에 새 종목 추가하기"
+          title="오늘 할 운동 추가하기"
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span>종목 추가</span>
+          <Plus className="w-4 h-4 text-[#3182F6]" />
+          <span>운동 추가</span>
         </button>
       </div>
 
       {/* 3. Active Exercise Hero Card & Direct Set Logger */}
       {currentExercise && (
         <div
-          className={`border rounded-3xl p-4 sm:p-5 shadow-2xl transition-colors ${
-            isLight
-              ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100'
-              : 'bg-[#121217] border-[#272732] text-white shadow-2xl ring-1 ring-white/5'
+          className={`rounded-3xl p-4 sm:p-5 transition-all ${
+            isDark
+              ? 'bg-[#1C1C1E] border border-[#2C2C2E] text-white'
+              : 'bg-white border border-slate-200 shadow-sm text-[#191F28]'
           }`}
         >
           {/* Exercise Focus Header */}
-          <div className="flex items-center justify-between gap-3 pb-3 border-b border-inherit">
+          <div className={`flex items-center justify-between gap-3 pb-3.5 border-b ${
+            isDark ? 'border-[#2C2C2E]' : 'border-slate-200'
+          }`}>
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                  isLight ? 'bg-slate-100 text-slate-700' : 'bg-[#23232D] text-slate-300'
-                }`}>
+                <TdsBadge size="xsmall" variant="weak" color="teal" isDark={isDark}>
                   #{currentExercise.targetMuscle}
-                </span>
+                </TdsBadge>
                 {currentExercise.target1RMPercent && (
-                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${
-                    isLight ? 'bg-lime-50 text-lime-800 border-lime-300' : 'bg-[#D4FF00]/10 text-[#D4FF00] border-[#D4FF00]/30'
-                  }`}>
-                    권장 강도 {currentExercise.target1RMPercent}% 1RM
+                  <span className={`text-xs font-bold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                    추천 강도: {currentExercise.target1RMPercent}%
                   </span>
                 )}
               </div>
-              <h2 className="text-lg font-black truncate">{currentExercise.name}</h2>
+              <h2 className="text-lg sm:text-xl font-black truncate">{currentExercise.name}</h2>
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className={`text-xs font-mono font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <span className={`text-xs font-semibold ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                 휴식 {currentExercise.restSeconds}초
               </span>
               <button
@@ -530,24 +551,24 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                   );
                   setIsExercisePickerOpen(true);
                 }}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all ${
-                  isLight
-                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                    : 'bg-[#181822] hover:bg-[#222230] text-slate-300 border-[#2A2A38]'
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                  isDark
+                    ? 'bg-[#242529] hover:bg-[#2C2D33] text-[#B0B8C1] border-[#33343A]'
+                    : 'bg-[#F2F4F6] hover:bg-[#E5E8EB] text-[#4E5968] border-slate-200'
                 }`}
-                title="다른 운동 종목으로 교체하기"
+                title="다른 운동으로 바꾸기"
               >
-                <Repeat className="w-3 h-3" />
+                <Repeat className="w-3.5 h-3.5" />
                 <span>종목 교체</span>
               </button>
             </div>
           </div>
 
           {/* Sets Table Header */}
-          <div className="grid grid-cols-12 gap-2 text-[10px] font-black text-slate-400 my-2 px-2">
+          <div className="grid grid-cols-12 gap-2 text-[11px] font-bold text-[#8B95A1] my-3 px-2">
             <div className="col-span-2">세트</div>
             <div className="col-span-4">무게 (kg)</div>
-            <div className="col-span-3 text-center">반복수</div>
+            <div className="col-span-3 text-center">횟수</div>
             <div className="col-span-3 text-center">완료</div>
           </div>
 
@@ -556,34 +577,30 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             {currentSets.map((set) => (
               <div
                 key={set.id}
-                className={`border rounded-2xl p-2.5 sm:p-3 transition-all ${
+                className={`rounded-2xl p-3 transition-all ${
                   set.completed
-                    ? isLight
-                      ? 'bg-slate-50 border-lime-400 ring-1 ring-lime-400/30'
-                      : 'bg-[#0A0A0E] border-[#D4FF00]/40 ring-1 ring-[#D4FF00]/20'
-                    : isLight
-                    ? 'bg-white border-slate-200'
-                    : 'bg-[#0A0A0E] border-[#23232D]'
+                    ? isDark
+                      ? 'bg-[#101012] border border-[#00C73C]/40 ring-1 ring-[#00C73C]/20'
+                      : 'bg-[#E8F9EE]/60 border border-[#00C73C]/30'
+                    : isDark
+                    ? 'bg-[#101012] border border-[#2C2C2E]'
+                    : 'bg-[#F2F4F6] border border-slate-200'
                 }`}
               >
                 <div className="grid grid-cols-12 gap-2 items-center">
                   {/* Set # */}
-                  <div className="col-span-2 flex items-center gap-1">
-                    <span
-                      className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${
-                        set.completed
-                          ? 'bg-[#D4FF00] text-black'
-                          : isLight ? 'bg-slate-100 text-slate-700' : 'bg-[#181820] text-slate-300'
-                      }`}
+                  <div className="col-span-2 flex items-center gap-1.5">
+                    <TdsBadge
+                      size="small"
+                      variant={set.completed ? 'fill' : 'weak'}
+                      color={set.completed ? 'green' : 'elephant'}
+                      isDark={isDark}
                     >
-                      #{set.setNumber}
-                    </span>
-                    {set.isWarmup && (
-                      <span className="text-[9px] font-bold text-amber-500 hidden sm:inline">웜업</span>
-                    )}
+                      {set.setNumber}세트
+                    </TdsBadge>
                   </div>
 
-                  {/* Weight Input + Quick +/- */}
+                  {/* Weight Input + Quick Chips */}
                   <div className="col-span-4">
                     <div className="relative flex items-center">
                       <input
@@ -599,23 +616,23 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                             )
                           }));
                         }}
-                        className={`w-full border rounded-xl px-2 py-1.5 text-xs sm:text-sm font-black font-mono-num outline-none ${
-                          isLight
-                            ? 'bg-white border-slate-300 text-slate-900 focus:border-lime-600'
-                            : 'bg-[#181820] border-[#23232D] text-white focus:border-[#D4FF00]'
+                        className={`w-full rounded-xl px-2.5 py-1.5 text-sm font-black font-mono-num outline-none border transition-colors ${
+                          isDark
+                            ? 'bg-[#1C1C1E] border-[#2C2C2E] text-white focus:border-[#3182F6]'
+                            : 'bg-white border-slate-300 text-[#191F28] focus:border-[#3182F6]'
                         }`}
                       />
-                      <span className="absolute right-2 text-[10px] font-bold text-slate-400 pointer-events-none">kg</span>
+                      <span className="absolute right-2 text-xs font-bold text-[#8B95A1] pointer-events-none">kg</span>
                     </div>
                   </div>
 
                   {/* Reps Stepper */}
-                  <div className="col-span-3 flex items-center border rounded-xl overflow-hidden border-inherit">
+                  <div className="col-span-3 flex items-center rounded-xl overflow-hidden border border-inherit">
                     <button
                       type="button"
                       onClick={() => handleAdjustReps(set.id, -1)}
-                      className={`w-6 h-8 flex items-center justify-center text-xs font-black ${
-                        isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#121217] text-slate-400 hover:text-white'
+                      className={`w-7 h-8 flex items-center justify-center text-xs font-black transition-colors ${
+                        isDark ? 'bg-[#242529] hover:bg-[#2C2D33] text-white' : 'bg-white hover:bg-slate-100 text-[#191F28]'
                       }`}
                     >
                       -
@@ -637,8 +654,8 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                     <button
                       type="button"
                       onClick={() => handleAdjustReps(set.id, 1)}
-                      className={`w-6 h-8 flex items-center justify-center text-xs font-black ${
-                        isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-[#121217] text-slate-400 hover:text-white'
+                      className={`w-7 h-8 flex items-center justify-center text-xs font-black transition-colors ${
+                        isDark ? 'bg-[#242529] hover:bg-[#2C2D33] text-white' : 'bg-white hover:bg-slate-100 text-[#191F28]'
                       }`}
                     >
                       +
@@ -650,21 +667,22 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                     <button
                       type="button"
                       onClick={() => handleToggleSetComplete(set.id)}
-                      className={`w-full max-w-[58px] h-8 rounded-xl flex items-center justify-center transition-all ${
+                      className={`w-full max-w-[64px] h-8 rounded-xl font-bold text-xs flex items-center justify-center gap-1 transition-all ${
                         set.completed
-                          ? 'bg-[#D4FF00] text-black shadow-md shadow-[#D4FF00]/25'
-                          : isLight
-                          ? 'bg-slate-100 border border-slate-300 text-slate-400 hover:border-slate-500'
-                          : 'bg-[#181820] border border-[#23232D] text-slate-500 hover:border-slate-400'
+                          ? 'bg-[#00C73C] text-white shadow-sm'
+                          : isDark
+                          ? 'bg-[#242529] text-[#B0B8C1] hover:bg-[#2C2D33] hover:text-white'
+                          : 'bg-white text-[#4E5968] hover:bg-slate-100 border border-slate-200'
                       }`}
                     >
-                      <Check className="w-4 h-4 stroke-[3]" />
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span className="hidden sm:inline">{set.completed ? '완료' : '끝'}</span>
                     </button>
                     {currentSets.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveSet(set.id)}
-                        className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                        className="p-1 text-[#8B95A1] hover:text-[#F04452] transition-colors"
                         title="세트 삭제"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -674,80 +692,71 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                 </div>
 
                 {/* Weight Quick Adjust Chips */}
-                <div className="flex items-center justify-end gap-1.5 mt-2 pt-1.5 border-t border-inherit">
-                  <span className="text-[10px] text-slate-400 mr-1">중량 조정:</span>
-                  <button
-                    type="button"
-                    onClick={() => handleAdjustWeight(set.id, -2.5)}
-                    className={`min-h-[28px] px-2 py-0.5 rounded-lg text-[11px] font-black border transition-all ${
-                      isLight ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-[#181820] text-slate-300 border-[#272732]'
-                    }`}
-                  >
-                    -2.5
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleAdjustWeight(set.id, 2.5)}
-                    className={`min-h-[28px] px-2 py-0.5 rounded-lg text-[11px] font-black border transition-all ${
-                      isLight ? 'bg-lime-50 text-lime-800 border-lime-300' : 'bg-[#181820] text-[#D4FF00] border-[#272732]'
-                    }`}
-                  >
-                    +2.5
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleAdjustWeight(set.id, 5)}
-                    className={`min-h-[28px] px-2 py-0.5 rounded-lg text-[11px] font-black border transition-all ${
-                      isLight ? 'bg-lime-50 text-lime-800 border-lime-300' : 'bg-[#181820] text-[#D4FF00] border-[#272732]'
-                    }`}
-                  >
-                    +5
-                  </button>
+                <div className={`flex items-center justify-end gap-1.5 mt-2.5 pt-2 border-t ${
+                  isDark ? 'border-[#2C2C2E]' : 'border-slate-200'
+                }`}>
+                  <span className={`text-[11px] font-medium mr-1 ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                    무게 변경:
+                  </span>
+                  {[-2.5, 2.5, 5].map((delta) => (
+                    <button
+                      key={delta}
+                      type="button"
+                      onClick={() => handleAdjustWeight(set.id, delta)}
+                      className={`min-h-[28px] px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all ${
+                        isDark
+                          ? 'bg-[#242529] hover:bg-[#2C2D33] text-[#B0B8C1] border border-[#2E3036]'
+                          : 'bg-white hover:bg-slate-100 text-[#4E5968] border border-slate-200 shadow-sm'
+                      }`}
+                    >
+                      {delta > 0 ? `+${delta}` : delta}
+                    </button>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Add Set & Next Exercise Drawer */}
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <TdsButton
+              variant="secondary"
+              size="small"
+              isDark={isDark}
               onClick={handleAddSet}
-              className={`px-3 py-2 rounded-xl border border-dashed text-xs font-black transition-all flex items-center gap-1.5 ${
-                isLight ? 'bg-slate-50 text-slate-700 border-slate-300 hover:border-lime-500' : 'bg-[#0A0A0E] text-slate-300 border-[#23232D] hover:border-[#D4FF00]/50'
-              }`}
+              leftIcon={<Plus className="w-3.5 h-3.5" />}
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>세트 추가</span>
-            </button>
+              세트 추가
+            </TdsButton>
 
             {activeExerciseIndex < todaySplitDay.exercises.length - 1 && (
-              <button
-                type="button"
+              <TdsButton
+                variant="weak"
+                size="small"
+                isDark={isDark}
                 onClick={() => setActiveExerciseIndex(prev => prev + 1)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black border transition-all flex items-center gap-1 ${
-                  isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' : 'bg-[#181820] hover:bg-[#23232D] text-white border-[#272732]'
-                }`}
+                rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
               >
-                <span>다음 종목: {todaySplitDay.exercises[activeExerciseIndex + 1].name}</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
+                다음: {todaySplitDay.exercises[activeExerciseIndex + 1].name}
+              </TdsButton>
             )}
           </div>
         </div>
       )}
 
-      {/* 4. Bottom Final Action: Save Workout Session */}
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={handleSaveTodaySession}
-          className="w-full py-3.5 rounded-2xl bg-[#D4FF00] hover:bg-[#C2EB00] text-black font-black text-sm sm:text-base shadow-xl shadow-[#D4FF00]/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[48px]"
-        >
-          <Sparkles className="w-4 h-4 fill-black" />
-          <span>오늘 {todaySplitDay.dayName}요일 운동 완료 및 기록 저장</span>
-        </button>
-      </div>
+      {/* 4. Bottom Fixed Floating CTA (TDS Mobile BottomCTA) */}
+      <TdsBottomCTA
+        text={`오늘 ${todaySplitDay.dayName}요일 운동 완료하기`}
+        subText={
+          completedExercisesCount > 0
+            ? `오늘 총 ${Math.round(todayLiveVolume).toLocaleString()}kg을 들어 올렸어요 👍`
+            : '세트를 완료하고 기록을 저장해볼까요?'
+        }
+        variant="primary"
+        isDark={isDark}
+        onClick={handleSaveTodaySession}
+        leftIcon={<Sparkles className="w-4 h-4" />}
+      />
 
       {/* Rest Timer Modal */}
       <RestTimerModal
@@ -759,30 +768,30 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
         themeMode={themeMode}
       />
 
-      {/* 5. Muscle-Group Exercise Picker Modal */}
+      {/* 5. Muscle-Group Exercise Picker Modal (TDS Sheet Style) */}
       {isExercisePickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div
-            className={`w-full max-w-lg rounded-3xl border shadow-2xl flex flex-col max-h-[88vh] overflow-hidden ${
-              isLight
-                ? 'bg-white border-slate-200 text-slate-900'
-                : 'bg-[#121217] border-[#272734] text-white'
+            className={`w-full max-w-lg rounded-t-3xl sm:rounded-3xl border shadow-2xl flex flex-col max-h-[85vh] overflow-hidden ${
+              isDark
+                ? 'bg-[#1C1C1E] border-[#2C2C2E] text-white'
+                : 'bg-white border-slate-200 text-[#191F28]'
             }`}
           >
             {/* Modal Header */}
-            <div className={`p-4 border-b flex items-center justify-between ${isLight ? 'border-slate-200 bg-slate-50/50' : 'border-[#22222E] bg-[#16161D]'}`}>
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${
-                  isLight ? 'bg-lime-100 border-lime-300 text-lime-800' : 'bg-[#D4FF00]/10 border-[#D4FF00]/30 text-[#D4FF00]'
-                }`}>
+            <div className={`p-4 border-b flex items-center justify-between ${
+              isDark ? 'border-[#2C2C2E]' : 'border-slate-200'
+            }`}>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-[#E8F3FF] dark:bg-[#3182F6]/15 text-[#3182F6] flex items-center justify-center">
                   <Dumbbell className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black">
-                    {pickerMode === 'replace' ? '운동 종목 교체하기' : '새 운동 종목 추가하기'}
+                  <h3 className="text-base font-black">
+                    {pickerMode === 'replace' ? '다른 운동으로 바꾸기' : '새 운동 추가하기'}
                   </h3>
-                  <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    부위별로 원하는 운동을 선택하세요
+                  <p className={`text-xs ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                    부위별로 원하는 종목을 골라보세요
                   </p>
                 </div>
               </div>
@@ -790,19 +799,17 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
               <button
                 type="button"
                 onClick={() => setIsExercisePickerOpen(false)}
-                className={`p-1.5 rounded-xl border transition-colors ${
-                  isLight
-                    ? 'hover:bg-slate-200 border-slate-300 text-slate-600'
-                    : 'hover:bg-[#20202A] border-[#2C2C3A] text-slate-400 hover:text-white'
+                className={`p-2 rounded-2xl transition-colors ${
+                  isDark ? 'hover:bg-[#2C2C2E] text-[#8B95A1]' : 'hover:bg-[#F2F4F6] text-[#6B7684]'
                 }`}
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Muscle Group Category Tabs (가슴, 등, 하체, 어깨, 팔, 코어) */}
-            <div className={`p-3 border-b flex items-center gap-1.5 overflow-x-auto scrollbar-none ${
-              isLight ? 'border-slate-100 bg-slate-50/30' : 'border-[#1E1E28] bg-[#0E0E14]'
+            {/* Muscle Group Category Tabs */}
+            <div className={`p-3 border-b flex items-center gap-1.5 overflow-x-auto no-scrollbar ${
+              isDark ? 'border-[#2C2C2E] bg-[#101012]' : 'border-slate-100 bg-[#F2F4F6]'
             }`}>
               {[
                 { id: 'all', label: '전체' },
@@ -819,14 +826,12 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedMuscleCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all flex-shrink-0 ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
                       isActive
-                        ? isLight
-                          ? 'bg-lime-600 text-white shadow-sm'
-                          : 'bg-[#D4FF00] text-black shadow-sm shadow-[#D4FF00]/25'
-                        : isLight
-                        ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                        : 'bg-[#181822] border border-[#262634] text-slate-400 hover:text-white hover:border-[#383848]'
+                        ? 'bg-[#3182F6] text-white shadow-sm font-black'
+                        : isDark
+                        ? 'bg-[#1C1C1E] text-[#8B95A1] hover:text-white border border-[#2C2C2E]'
+                        : 'bg-white text-[#6B7684] hover:text-[#191F28] border border-slate-200'
                     }`}
                   >
                     {cat.label}
@@ -839,13 +844,13 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             <div className="p-3 border-b border-inherit">
               <input
                 type="text"
-                placeholder="종목명 또는 타겟 부위 검색 (예: 벤치, 스쿼트, 덤벨)..."
+                placeholder="운동 종목 이름 검색 (예: 벤치프레스, 스쿼트)..."
                 value={searchExerciseQuery}
                 onChange={(e) => setSearchExerciseQuery(e.target.value)}
-                className={`w-full px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border outline-none transition-all ${
-                  isLight
-                    ? 'bg-white border-slate-300 text-slate-900 focus:border-lime-500'
-                    : 'bg-[#0E0E14] border-[#262634] text-white focus:border-[#D4FF00]'
+                className={`w-full px-3.5 py-2.5 rounded-2xl text-sm font-medium border outline-none transition-colors ${
+                  isDark
+                    ? 'bg-[#101012] border-[#2C2C2E] text-white focus:border-[#3182F6]'
+                    : 'bg-[#F2F4F6] border-slate-200 text-[#191F28] focus:border-[#3182F6]'
                 }`}
               />
             </div>
@@ -853,56 +858,41 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
             {/* Exercise List */}
             <div className="p-3 overflow-y-auto max-h-[50vh] space-y-2">
               {filteredLibraryExercises.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-400">
-                  해당하는 운동 종목이 없습니다.
+                <div className="py-12 text-center text-xs text-[#8B95A1]">
+                  해당하는 운동 종목을 찾지 못했어요.
                 </div>
               ) : (
                 filteredLibraryExercises.map((masterEx) => (
                   <div
                     key={masterEx.id}
                     onClick={() => handleSelectLibraryExercise(masterEx)}
-                    className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
-                      isLight
-                        ? 'bg-white hover:bg-lime-50/60 border-slate-200 hover:border-lime-400'
-                        : 'bg-[#16161E] hover:bg-[#1C1C26] border-[#242432] hover:border-[#D4FF00]/50'
+                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
+                      isDark
+                        ? 'bg-[#101012] hover:bg-[#242529] border-[#2C2C2E]'
+                        : 'bg-white hover:bg-slate-50 border-slate-200 shadow-sm'
                     }`}
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
-                          isLight ? 'bg-slate-100 text-slate-700' : 'bg-[#22222E] text-slate-300'
-                        }`}>
+                        <TdsBadge size="xsmall" variant="weak" color="blue" isDark={isDark}>
                           {masterEx.targetMuscle}
-                        </span>
-                        <span className={`text-[10px] font-mono font-bold ${
-                          masterEx.intensity === 'High' ? 'text-amber-500' : 'text-slate-400'
-                        }`}>
-                          {masterEx.intensity} 강도
-                        </span>
+                        </TdsBadge>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-black truncate">{masterEx.name}</h4>
+                      <h4 className="text-sm font-bold truncate">{masterEx.name}</h4>
                       {masterEx.tip && (
-                        <p className={`text-[11px] truncate mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <p className={`text-xs truncate mt-0.5 ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
                           💡 {masterEx.tip}
                         </p>
                       )}
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className={`text-right text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        <div>{masterEx.defaultSets}세트 · {masterEx.defaultReps}</div>
-                        <div>휴식 {masterEx.defaultRestSeconds}초</div>
+                      <div className={`text-right text-xs font-mono ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+                        <div>{masterEx.defaultSets}세트 · {masterEx.defaultReps}회</div>
                       </div>
-                      <button
-                        type="button"
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black border transition-all ${
-                          isLight
-                            ? 'bg-lime-600 text-white border-lime-600 shadow-sm'
-                            : 'bg-[#D4FF00] text-black border-[#D4FF00] font-black'
-                        }`}
-                      >
+                      <TdsButton size="small" variant="weak" isDark={isDark}>
                         선택
-                      </button>
+                      </TdsButton>
                     </div>
                   </div>
                 ))

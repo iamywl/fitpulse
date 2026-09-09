@@ -1,0 +1,36 @@
+services:
+  # Production Service: Optimized multi-stage Nginx container
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fitpulse-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Development Service: Live hot-reloading Vite dev server (Optional)
+  dev:
+    image: node:20-alpine
+    container_name: fitpulse-dev
+    working_dir: /app
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    profiles:
+      - dev

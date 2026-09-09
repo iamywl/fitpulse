@@ -4,21 +4,18 @@ import { DEFAULT_WEEKLY_SPLIT } from '../data/splitRoutineData';
 import { 
   CalendarDays, 
   Clock, 
-  Target, 
   CheckCircle2, 
-  Circle, 
   Sparkles, 
-  Zap, 
   Dumbbell, 
   Play,
-  RotateCcw
+  RotateCcw,
+  SlidersHorizontal
 } from 'lucide-react';
-
-import { ThemeMode } from '../theme/pantone';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
 import { RoutineBuilderModal } from './RoutineBuilderModal';
-import { SlidersHorizontal } from 'lucide-react';
+import { TdsBadge } from './tds/TdsBadge';
+import { TdsButton } from './tds/TdsButton';
 
 interface WeeklySplitRoutineSectionProps {
   onStartRoutine?: (splitDay: IWeeklySplitDay) => void;
@@ -27,21 +24,19 @@ interface WeeklySplitRoutineSectionProps {
   splitList?: IWeeklySplitDay[];
   onUpdateSplit?: (updatedSplit: IWeeklySplitDay[]) => void;
   isMobileView?: boolean;
-  themeMode?: ThemeMode;
+  themeMode?: 'dark' | 'light';
 }
 
 export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps> = ({
   onStartRoutine,
   onSelectRoutineExercise,
-  onQuickLog,
   splitList: propSplitList,
   onUpdateSplit,
   isMobileView = false,
-  themeMode = 'dark',
+  themeMode = 'light',
 }) => {
-  const isLight = themeMode === 'light';
-  // 0: Sun, 1: Mon, ..., 6: Sat
-  const currentDayIndex = new Date().getDay();
+  const isDark = themeMode === 'dark';
+  const currentDayIndex = new Date().getDay(); // 0: Sun, 1: Mon, ...
 
   // Active selected day (default to today)
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(currentDayIndex);
@@ -103,101 +98,53 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
 
   return (
     <div
-      className={`border rounded-3xl ${
-        isMobileView ? 'p-3.5' : 'p-4 sm:p-5'
-      } shadow-xl relative overflow-hidden transition-colors ${
-        isLight
-          ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100'
-          : 'bg-[#111115] border-[#272732] text-white shadow-2xl'
+      className={`rounded-3xl ${
+        isMobileView ? 'p-4' : 'p-5 sm:p-6'
+      } transition-all ${
+        isDark
+          ? 'bg-[#1C1C1E] border border-[#2C2C2E] text-white'
+          : 'bg-white border border-slate-200 shadow-sm text-[#191F28]'
       }`}
     >
-      {/* Top Accent Line */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-[3px] ${
-          isLight
-            ? 'bg-gradient-to-r from-transparent via-lime-500 to-transparent'
-            : 'bg-gradient-to-r from-transparent via-[#CCFF00] to-transparent opacity-80'
-        }`}
-      />
-
       {/* Header Bar */}
-      <div className="flex items-center justify-between gap-2 mb-4 pt-1">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 border ${
-              isLight
-                ? 'bg-lime-50 border-lime-200 text-lime-700'
-                : 'bg-[#CCFF00]/10 border-[#CCFF00]/30 text-[#CCFF00] shadow-[0_0_12px_rgba(204,255,0,0.2)]'
-            }`}
-          >
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#E8F3FF] dark:bg-[#3182F6]/15 text-[#3182F6] flex-shrink-0">
             <CalendarDays className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className={`text-base sm:text-lg font-black tracking-tight whitespace-nowrap ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                주간 분할 루틴
+              <h2 className="text-lg sm:text-xl font-black tracking-tight whitespace-nowrap">
+                이번 주 운동 계획
               </h2>
-              <span
-                className={`hidden sm:inline-block text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0 tracking-wider ${
-                  isLight
-                    ? 'bg-lime-100 text-lime-800 border border-lime-300'
-                    : 'bg-[#D4FF00]/20 text-[#D4FF00] border border-[#D4FF00]/40'
-                }`}
-              >
-                WEEKLY SPLIT
-              </span>
+              <TdsBadge size="xsmall" variant="weak" color="blue" isDark={isDark}>
+                주간 분할
+              </TdsBadge>
             </div>
+            <p className={`text-xs ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+              요일을 선택하여 루틴을 확인하세요
+            </p>
           </div>
         </div>
 
-        {/* Action buttons: Routine Builder & Quick Log */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            onClick={() => setIsBuilderOpen(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition-all min-h-[38px] ${
-              isLight
-                ? 'bg-lime-600 hover:bg-lime-700 text-white border-lime-500 shadow-sm'
-                : 'bg-[#D4FF00] hover:bg-[#CCFF00] text-black font-black shadow-[0_0_12px_rgba(212,255,0,0.3)]'
-            }`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span className="whitespace-nowrap">루틴 만들기</span>
-          </button>
-
-          {onQuickLog && (
-            <button
-              onClick={onQuickLog}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition-all min-h-[38px] ${
-                isLight
-                  ? 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200'
-                  : 'bg-[#18181F] text-[#CCFF00] border-[#CCFF00]/30 hover:bg-[#CCFF00]/10'
-              }`}
-            >
-              <Zap className={`w-3.5 h-3.5 ${isLight ? 'fill-lime-600 text-lime-600' : 'fill-[#CCFF00] text-[#CCFF00]'}`} />
-              <span>오늘 완료</span>
-            </button>
-          )}
-        </div>
+        {/* Action: Routine Builder */}
+        <TdsButton
+          size="small"
+          variant="secondary"
+          isDark={isDark}
+          onClick={() => setIsBuilderOpen(true)}
+          leftIcon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+        >
+          루틴 설정
+        </TdsButton>
       </div>
 
-      {/* 7-Day Apple/Whoop Style Horizontal Strip Selector */}
-      <div className="mb-4">
-        <div className={`flex items-center justify-between text-[11px] font-semibold mb-2 px-1 ${isLight ? 'text-slate-500' : 'text-[#64748B]'}`}>
-          <span>요일 선택 (DAY OF WEEK)</span>
-          <span className={isLight ? 'text-slate-600' : 'text-[#94A3B8]'}>
-            오늘:{' '}
-            <strong className={isLight ? 'text-lime-700' : 'text-[#CCFF00]'}>
-              {['일', '월', '화', '수', '목', '금', '토'][currentDayIndex]}요일
-            </strong>
-          </span>
-        </div>
-
-        {/* Horizontal Days Scroll / Grid with extra top padding so badge never clips */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-1.5 pt-3.5">
+      {/* 7-Day Horizontal Strip Selector */}
+      <div className="mb-5">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5 pt-2">
           {orderedSplitList.map((day) => {
             const isToday = day.dayIndex === currentDayIndex;
             const isSelected = day.dayIndex === selectedDayIndex;
-            // Short target muscle label for at-a-glance recognition
             const primaryMuscle = day.isRestDay
               ? '휴식'
               : day.targetMuscles[0]
@@ -208,71 +155,50 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
               <button
                 key={day.dayKey}
                 onClick={() => setSelectedDayIndex(day.dayIndex)}
-                className={`flex flex-col items-center justify-between py-2 px-1 rounded-2xl transition-all relative min-h-[76px] ${
+                className={`flex flex-col items-center justify-between py-2.5 px-1 rounded-2xl transition-all relative select-none min-h-[78px] ${
                   isSelected
-                    ? isLight
-                      ? 'bg-white border-2 border-lime-600 shadow-sm ring-2 ring-lime-500/20'
-                      : 'bg-[#18181F] border-2 border-[#D4FF00] shadow-[0_0_10px_rgba(212,255,0,0.2)]'
-                    : isLight
-                    ? 'bg-slate-50 border border-slate-200 hover:border-slate-300 hover:bg-slate-100'
-                    : 'bg-[#14141A] border border-[#23232D] hover:border-[#383848] hover:bg-[#181822]'
+                    ? 'bg-[#3182F6] text-white shadow-sm font-black'
+                    : isToday
+                    ? isDark
+                      ? 'bg-[#242529] text-white border border-[#3182F6]/40'
+                      : 'bg-[#E8F3FF] text-[#1B64DA] border border-[#3182F6]/30'
+                    : isDark
+                    ? 'bg-[#101012] text-[#8B95A1] hover:text-white border border-[#2C2C2E]'
+                    : 'bg-[#F2F4F6] text-[#6B7684] hover:text-[#191F28] border border-slate-200'
                 }`}
               >
-                {/* Today Indicator Badge - with safe clearance */}
+                {/* Today Indicator */}
                 {isToday && (
                   <span
-                    className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-1.5 py-0.2 text-[8px] font-black rounded-full whitespace-nowrap shadow-sm ${
-                      isLight
-                        ? 'bg-lime-600 text-white'
-                        : 'bg-[#D4FF00] text-black'
+                    className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-1.5 py-0.2 text-[8px] font-black rounded-full whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-white text-[#3182F6]'
+                        : 'bg-[#3182F6] text-white'
                     }`}
                   >
-                    TODAY
+                    오늘
                   </span>
                 )}
 
-                {/* Day Header: Day of week */}
+                {/* Day of week */}
                 <div className="flex flex-col items-center leading-none">
-                  <span
-                    className={`text-[9px] sm:text-[10px] font-mono font-bold tracking-wider ${
-                      isSelected
-                        ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
-                        : isToday
-                        ? isLight ? 'text-slate-900 font-black' : 'text-white'
-                        : isLight ? 'text-slate-400' : 'text-slate-500'
-                    }`}
-                  >
+                  <span className={`text-[10px] font-mono tracking-wider ${isSelected ? 'text-white' : ''}`}>
                     {day.englishShort}
                   </span>
-
-                  <span
-                    className={`text-xs sm:text-sm font-black mt-0.5 ${
-                      isSelected
-                        ? isLight ? 'text-slate-900' : 'text-white'
-                        : isToday
-                        ? isLight ? 'text-lime-700' : 'text-[#D4FF00]'
-                        : isLight ? 'text-slate-700' : 'text-slate-300'
-                    }`}
-                  >
+                  <span className={`text-xs sm:text-sm font-black mt-1 ${isSelected ? 'text-white' : ''}`}>
                     {day.dayName}
                   </span>
                 </div>
 
-                {/* Target Muscle Tag (한눈에 알 수 있는 부위 표시) */}
-                <div className="mt-1.5 w-full flex items-center justify-center">
+                {/* Target Muscle Tag */}
+                <div className="mt-1 w-full flex items-center justify-center">
                   <span
-                    className={`text-[9px] sm:text-[10px] font-black px-1 py-0.5 rounded-md truncate max-w-full text-center leading-none ${
-                      day.isRestDay
-                        ? isLight
-                          ? 'bg-slate-200 text-slate-500'
-                          : 'bg-[#23232D] text-slate-400'
-                        : isSelected
-                        ? isLight
-                          ? 'bg-lime-100 text-lime-800 font-bold'
-                          : 'bg-[#D4FF00]/15 text-[#D4FF00] font-bold border border-[#D4FF00]/30'
-                        : isLight
-                        ? 'bg-slate-100 text-slate-600'
-                        : 'bg-[#1D1D26] text-slate-300 border border-[#272734]'
+                    className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md truncate max-w-full text-center ${
+                      isSelected
+                        ? 'bg-white/20 text-white'
+                        : day.isRestDay
+                        ? isDark ? 'bg-[#1C1C1E] text-[#6B7684]' : 'bg-slate-200 text-[#6B7684]'
+                        : isDark ? 'bg-[#242529] text-[#B0B8C1]' : 'bg-white text-[#4E5968]'
                     }`}
                   >
                     {primaryMuscle}
@@ -286,110 +212,72 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
 
       {/* Main Routine Details Card */}
       <div
-        className={`border rounded-2xl p-3.5 sm:p-4 mb-3 transition-colors ${
-          isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#18181F] border-[#272732]'
+        className={`rounded-2xl p-4 transition-colors ${
+          isDark ? 'bg-[#101012] border border-[#2C2C2E]' : 'bg-[#F2F4F6] border border-slate-200'
         }`}
       >
         {/* Day Headline & Meta */}
-        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b ${isLight ? 'border-slate-200' : 'border-[#272732]'}`}>
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3.5 border-b ${
+          isDark ? 'border-[#2C2C2E]' : 'border-slate-200'
+        }`}>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <span
-                className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md border ${
-                  isLight
-                    ? 'bg-lime-50 text-lime-800 border-lime-200'
-                    : 'bg-[#CCFF00]/10 text-[#CCFF00] border-[#CCFF00]/20'
-                }`}
-              >
-                {activeDay.englishShort} · {activeDay.dayName}요일
-              </span>
+              <TdsBadge size="small" variant="weak" color="blue" isDark={isDark}>
+                {activeDay.dayName}요일 계획
+              </TdsBadge>
               {isTodayActive && (
-                <span
-                  className={`text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm ${
-                    isLight
-                      ? 'bg-[#D4FF00] text-black border border-lime-400'
-                      : 'bg-[#CCFF00] text-[#09090B]'
-                  }`}
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>오늘 진행할 분할</span>
-                </span>
+                <TdsBadge size="small" variant="fill" color="blue" isDark={isDark} icon={<Sparkles className="w-3 h-3" />}>
+                  오늘 할 운동
+                </TdsBadge>
               )}
               {activeDay.isRestDay ? (
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
-                    isLight ? 'bg-slate-200 text-slate-700' : 'bg-[#272732] text-[#94A3B8]'
-                  }`}
-                >
-                  RECOVERY DAY
-                </span>
+                <TdsBadge size="small" variant="weak" color="elephant" isDark={isDark}>
+                  휴식일
+                </TdsBadge>
               ) : (
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 ${
-                    isLight
-                      ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                      : 'bg-[#00B4D8]/10 text-[#38BDF8] border border-[#00B4D8]/20'
-                  }`}
-                >
-                  <Target className="w-3 h-3" />
-                  <span>TARGETED FOCUS</span>
-                </span>
+                <TdsBadge size="small" variant="weak" color="teal" isDark={isDark}>
+                  목표 부위 집중
+                </TdsBadge>
               )}
             </div>
-            <h3 className={`text-base sm:text-lg font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <h3 className="text-base sm:text-lg font-black tracking-tight">
               {activeDay.title}
             </h3>
-            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
+            <p className={`text-xs mt-0.5 ${isDark ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}>
               {activeDay.categoryDesc}
             </p>
           </div>
 
           {/* Time and Target Muscles */}
           <div className="flex sm:flex-col items-start sm:items-end justify-between gap-1 flex-shrink-0">
-            <div
-              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-xl border ${
-                isLight
-                  ? 'bg-white text-slate-600 border-slate-200'
-                  : 'bg-[#111115] text-[#94A3B8] border-[#272732]'
-              }`}
-            >
-              <Clock className={`w-3.5 h-3.5 ${isLight ? 'text-lime-700' : 'text-[#CCFF00]'}`} />
-              <span className={`font-mono-num font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                {activeDay.estimatedMinutes > 0 ? `${activeDay.estimatedMinutes}분` : '충분한 수면'}
+            <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-xl border ${
+              isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] text-[#B0B8C1]' : 'bg-white border-slate-200 text-[#4E5968]'
+            }`}>
+              <Clock className="w-3.5 h-3.5 text-[#3182F6]" />
+              <span className="font-bold">
+                {activeDay.estimatedMinutes > 0 ? `${activeDay.estimatedMinutes}분` : '충분한 휴식'}
               </span>
-            </div>
-            <div className="flex items-center gap-1 flex-wrap">
-              {activeDay.targetMuscles.map((muscle, idx) => (
-                <span
-                  key={idx}
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                    isLight
-                      ? 'bg-slate-200 text-slate-700'
-                      : 'bg-[#272732] text-slate-300'
-                  }`}
-                >
-                  #{muscle}
-                </span>
-              ))}
             </div>
           </div>
         </div>
 
-        {/* Routine Checklist Progress Bar (when exercises exist) */}
+        {/* Routine Checklist Progress Bar */}
         {totalExercises > 0 && !activeDay.isRestDay && (
-          <div className={`py-2.5 flex items-center justify-between gap-3 text-xs border-b ${isLight ? 'border-slate-200' : 'border-[#272732]/60'}`}>
-            <div className={`flex items-center gap-2 ${isLight ? 'text-slate-600' : 'text-[#94A3B8]'}`}>
-              <CheckCircle2 className={`w-3.5 h-3.5 ${isLight ? 'text-lime-700' : 'text-[#CCFF00]'}`} />
-              <span>진행 완료:</span>
-              <strong className={`font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
+          <div className={`py-3 flex items-center justify-between gap-3 text-xs border-b ${
+            isDark ? 'border-[#2C2C2E]' : 'border-slate-200'
+          }`}>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#00C73C]" />
+              <span className={isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}>진행 완료:</span>
+              <strong className="font-bold">
                 {completedCount} / {totalExercises} 종목 ({progressPercent}%)
               </strong>
             </div>
             {completedCount > 0 && (
               <button
                 onClick={handleResetChecklist}
-                className={`text-[11px] flex items-center gap-1 transition-colors ${
-                  isLight ? 'text-slate-500 hover:text-slate-800' : 'text-[#64748B] hover:text-[#94A3B8]'
+                className={`text-xs flex items-center gap-1 transition-colors ${
+                  isDark ? 'text-[#8B95A1] hover:text-white' : 'text-[#8B95A1] hover:text-[#191F28]'
                 }`}
               >
                 <RotateCcw className="w-3 h-3" />
@@ -408,83 +296,60 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
               <div
                 key={exercise.id}
                 onClick={() => handleToggleExercise(exercise.id)}
-                className={`p-3 rounded-xl border transition-all cursor-pointer select-none flex items-start justify-between gap-3 ${
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 ${
                   isCompleted
-                    ? isLight
-                      ? 'bg-slate-100/70 border-slate-200 opacity-75'
-                      : 'bg-[#111115]/80 border-[#272732] opacity-75'
-                    : isLight
-                    ? 'bg-white border-slate-200 hover:border-lime-500/40 hover:bg-slate-50/80 shadow-sm'
-                    : 'bg-[#111115] border-[#272732] hover:border-[#3F3F50]'
+                    ? isDark
+                      ? 'bg-[#1C1C1E]/60 border-[#2C2C2E] opacity-60'
+                      : 'bg-white/60 border-slate-200 opacity-60'
+                    : isDark
+                    ? 'bg-[#1C1C1E] border-[#2C2C2E] hover:border-[#3A3B42]'
+                    : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
                 }`}
               >
                 {/* Left: Check icon + Details */}
-                <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                  <button
-                    type="button"
-                    className="mt-0.5 transition-colors flex-shrink-0"
-                    aria-label="세트 완료 토글"
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                      isCompleted
+                        ? 'bg-[#00C73C] text-white'
+                        : isDark
+                        ? 'border-2 border-[#3A3B42]'
+                        : 'border-2 border-slate-300'
+                    }`}
                   >
-                    {isCompleted ? (
-                      <CheckCircle2 className={`w-5 h-5 ${isLight ? 'text-lime-600' : 'text-[#CCFF00] fill-[#CCFF00]/10'}`} />
-                    ) : (
-                      <Circle className={`w-5 h-5 ${isLight ? 'text-slate-400' : 'text-[#64748B]'}`} />
-                    )}
-                  </button>
+                    {isCompleted && <CheckCircle2 className="w-4 h-4 text-white" />}
+                  </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[11px] font-mono font-bold ${isLight ? 'text-slate-400' : 'text-[#64748B]'}`}>
+                      <span className={`text-xs font-mono font-bold ${isDark ? 'text-[#6B7684]' : 'text-[#8B95A1]'}`}>
                         0{index + 1}
                       </span>
-                      <span
-                        className={`text-xs sm:text-sm font-black truncate ${
-                          isCompleted
-                            ? isLight ? 'text-slate-400 line-through' : 'text-[#94A3B8] line-through'
-                            : isLight ? 'text-slate-900' : 'text-white'
-                        }`}
-                      >
+                      <span className={`text-sm font-bold truncate ${
+                        isCompleted ? 'line-through text-[#8B95A1]' : isDark ? 'text-white' : 'text-[#191F28]'
+                      }`}>
                         {exercise.name}
                       </span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                          isLight ? 'bg-slate-100 text-slate-600 border border-slate-200' : 'bg-[#272732] text-[#94A3B8]'
-                        }`}
-                      >
+                      <TdsBadge size="xsmall" variant="weak" color="elephant" isDark={isDark}>
                         {exercise.targetMuscle}
-                      </span>
-                      {exercise.target1RMPercent && (
-                        <span
-                          className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                            isLight
-                              ? 'bg-lime-50 text-lime-800 border-lime-300'
-                              : 'text-[#CCFF00] bg-[#CCFF00]/10 border-[#CCFF00]/20'
-                          }`}
-                        >
-                          {exercise.target1RMPercent}% 1RM
-                        </span>
-                      )}
+                      </TdsBadge>
                     </div>
                   </div>
                 </div>
 
-                {/* Right: Sets x Reps + Rest Time */}
-                <div className="flex flex-col items-end justify-center flex-shrink-0 pl-1 gap-1">
-                  <div
-                    className={`border px-2.5 py-1 rounded-lg text-right ${
-                      isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#18181F] border-[#272732]'
-                    }`}
-                  >
-                    <span className={`text-xs font-mono font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                      {exercise.sets}세트
-                    </span>
-                    <span className={`text-[11px] ml-1 font-mono ${isLight ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
-                      × {exercise.reps}
-                    </span>
+                {/* Right: Sets x Reps */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className={`px-2.5 py-1 rounded-xl text-xs font-bold font-mono ${
+                    isDark ? 'bg-[#242529] text-white' : 'bg-[#F2F4F6] text-[#191F28]'
+                  }`}>
+                    {exercise.sets}세트 × {exercise.reps}회
                   </div>
+
                   {onSelectRoutineExercise && !activeDay.isRestDay && (
-                    <button
-                      type="button"
+                    <TdsButton
+                      size="small"
+                      variant="weak"
+                      isDark={isDark}
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectRoutineExercise(
@@ -499,19 +364,9 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
                           parseInt(exercise.reps) || 10
                         );
                       }}
-                      className={`min-h-[30px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
-                        isLight
-                          ? 'bg-slate-100 hover:bg-[#D4FF00] hover:text-black text-slate-700 border border-slate-200'
-                          : 'bg-[#272732] hover:bg-[#CCFF00] hover:text-[#09090B] text-[#94A3B8]'
-                      }`}
                     >
-                      세트 기입 →
-                    </button>
-                  )}
-                  {exercise.restSeconds > 0 && (
-                    <span className={`text-[10px] font-mono ${isLight ? 'text-slate-400' : 'text-[#64748B]'}`}>
-                      휴식 {exercise.restSeconds}초
-                    </span>
+                      기록하기
+                    </TdsButton>
                   )}
                 </div>
               </div>
@@ -520,26 +375,26 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
         </div>
       </div>
 
-      {/* Bottom CTA / Action Strip */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-1">
-        <div className={`text-xs flex items-center gap-1.5 w-full sm:w-auto ${isLight ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
-          <Dumbbell className={`w-3.5 h-3.5 ${isLight ? 'text-lime-700' : 'text-[#CCFF00]'}`} />
+      {/* Bottom CTA */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
+        <div className={`text-xs flex items-center gap-1.5 w-full sm:w-auto ${isDark ? 'text-[#8B95A1]' : 'text-[#6B7684]'}`}>
+          <Dumbbell className="w-4 h-4 text-[#3182F6]" />
           <span>
-            {isTodayActive ? '오늘 추천 운동이 즉시 세트 매니저와 연동됩니다.' : '원하는 요일을 탭하여 루틴을 사전 점검하세요.'}
+            {isTodayActive ? '오늘 추천 운동을 바로 시작할 수 있어요.' : '원하는 요일을 눌러 루틴을 미리 살펴보세요.'}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {onStartRoutine && (
-            <button
-              onClick={() => onStartRoutine(activeDay)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm bg-[#CCFF00] text-[#09090B] hover:bg-[#D4FF00] active:scale-[0.98] transition-all shadow-md shadow-[#CCFF00]/20 min-h-[44px]"
-            >
-              <Play className="w-4 h-4 fill-[#09090B]" />
-              <span>{isTodayActive ? '오늘 루틴 운동 시작' : `${activeDay.dayName}요일 루틴 선택`}</span>
-            </button>
-          )}
-        </div>
+        {onStartRoutine && (
+          <TdsButton
+            size="medium"
+            variant="primary"
+            isDark={isDark}
+            onClick={() => onStartRoutine(activeDay)}
+            leftIcon={<Play className="w-4 h-4 fill-white" />}
+          >
+            {isTodayActive ? '오늘 운동 시작하기' : `${activeDay.dayName}요일 루틴으로 시작`}
+          </TdsButton>
+        )}
       </div>
 
       {/* 휴식 타이머 모달 */}
@@ -567,4 +422,3 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
     </div>
   );
 };
-

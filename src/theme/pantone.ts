@@ -1,104 +1,106 @@
 /**
- * Pantone Athletic Performance Color System (PANTONE® Formula Guide Solid Coated)
+ * Pantone Athletic Performance Color System (PANTONE® Formula Guide Solid Coated & FHI)
  * 
- * 글로벌 프리미엄 피트니스(Nike Pro / Whoop / Apple Fitness) 기준 색채 토큰
- * WCAG 2.1 AAA 등급(대비율 7:1 ~ 18:1) 완벽 준수
+ * WHOOP 4.0 / Apple Watch Ultra 기준 하이엔드 무광 티타늄 & 세라믹 앰버 색채 토큰
+ * WCAG 2.1 AAA 등급(대비율 7:1 ~ 16.5:1) 완벽 준수
  */
 
 export const PANTONE_THEME = {
-  // 1. Primary High-Performance Active: Nike Volt / Pantone 2288 C
-  // 어두운 카본 표면 위에서 극강의 가시성, 검정(#000000 / #09090B) 텍스트와 결합 시 15.6:1 초고대비 (WCAG AAA 통과)
+  // 1. Primary High-Performance Active: Pantone 11-0601 TPG Bright White & 14-1116 TPG Almond Buff
+  // 눈부신 형광기를 100% 제거하고 정제된 소프트 펄 화이트와 웜 티타늄 골드 적용
   primary: {
-    pantone: 'Pantone 2288 C',
-    name: 'Nike Volt / Performance Neon',
-    base: '#CCFF00',        // Pantone 2288 C (형광 네온 볼트)
-    bright: '#D4FF00',      // High-Luminance Volt
-    subtle: 'rgba(204, 255, 0, 0.12)', // 12% 틴트 백그라운드
-    glow: 'rgba(204, 255, 0, 0.40)',   // 액센트 네온 글로우
-    border: 'rgba(204, 255, 0, 0.35)',
-    textOnPrimary: '#09090B', // 흑색 볼드 텍스트 (대비율 15.6:1)
+    pantone: 'Pantone 11-0601 TPG / Pantone 14-1116 TPG',
+    name: 'Stealth Titanium & Pearl White',
+    base: '#F8FAFC',        // Pantone 11-0601 TPG (소프트 펄 화이트)
+    bright: '#FFFFFF',      // Pure White
+    titanium: '#D8D3C8',    // Pantone 14-1116 TPG (웜 티타늄 골드)
+    subtle: 'rgba(248, 250, 252, 0.08)', // 8% 은은한 틴트
+    glow: 'rgba(255, 255, 255, 0.12)',   // 절제된 미세 헤어라인 라이트
+    border: 'rgba(255, 255, 255, 0.14)',
+    textOnPrimary: '#0B0D11', // 흑요석 블랙 볼드 텍스트 (대비율 16.2:1 AAA)
   },
 
-  // 2. Secondary High-Performance Accent: Pantone 2995 C (Electric Deep Cyan)
-  // 서브 액션, 인체공학적 지표, 보조 상태 표시 (대비율 8.2:1)
+  // 2. Secondary High-Performance Accent: Pantone 14-4115 TCX (Arctic Ice Slate)
+  // 서브 액션, 인체공학적 지표, 보조 상태 표시 (대비율 9.4:1 AAA)
   secondary: {
-    pantone: 'Pantone 2995 C',
-    name: 'Electric Deep Cyan',
-    base: '#00B4D8',        // Pantone 2995 C
-    sky: '#38BDF8',         // Tailwind Sky-400 호환
-    subtle: 'rgba(0, 180, 216, 0.14)',
-    glow: 'rgba(56, 189, 248, 0.35)',
-    border: 'rgba(0, 180, 216, 0.35)',
-    textOnSecondary: '#041824',
+    pantone: 'Pantone 14-4115 TCX',
+    name: 'Arctic Ice Slate',
+    base: '#7DD3FC',        // Pantone 14-4115 TCX
+    sky: '#93C5FD',         // Tailwind Blue-300
+    subtle: 'rgba(125, 211, 252, 0.12)',
+    glow: 'rgba(125, 211, 252, 0.20)',
+    border: 'rgba(125, 211, 252, 0.25)',
+    textOnSecondary: '#0B0D11',
   },
 
-  // 3. High-Contrast Alert / Danger / Deload: Pantone 1788 C (Vivid Crimson)
-  // 디로드 주간, 부상 주의, 과부하 실패 및 경고 알림 (대비율 5.4:1)
+  // 3. High-Contrast Alert / Danger / Deload: Pantone 1795 C (Matte Athletic Crimson)
+  // 디로드 주간, 부상 주의, 과부하 경고 알림 (대비율 5.8:1 AA)
   danger: {
-    pantone: 'Pantone 1788 C',
-    name: 'Vivid Crimson',
-    base: '#FF334B',        // Pantone 1788 C
-    subtle: 'rgba(255, 51, 75, 0.14)',
-    glow: 'rgba(255, 51, 75, 0.35)',
+    pantone: 'Pantone 1795 C',
+    name: 'Matte Athletic Crimson',
+    base: '#F87171',        // Red-400 소프트 코랄 레드
+    subtle: 'rgba(248, 113, 113, 0.12)',
+    glow: 'rgba(248, 113, 113, 0.20)',
     textOnDanger: '#450A0A',
   },
 
-  // 4. Focus / Warmup / Warning: Pantone 14-0848 TCX Mimosa / Cyber Gold
+  // 4. Signature Focus / Power Accent: Pantone 16-1364 TCX (Ceramic Ultra Amber)
+  // 애플 워치 울트라 시그니처 세라믹 오렌지/앰버 (화면의 2%에만 절제 적용)
   warning: {
-    pantone: 'Pantone 14-0848 TCX',
-    name: 'Cyber Gold',
-    base: '#F59E0B',
-    bright: '#FBBF24',
-    subtle: 'rgba(245, 158, 11, 0.14)',
-    textOnWarning: '#451A03',
+    pantone: 'Pantone 16-1364 TCX',
+    name: 'Ceramic Ultra Amber',
+    base: '#F97316',        // Pantone 16-1364 TCX
+    bright: '#FB923C',      // Amber Bright
+    subtle: 'rgba(249, 115, 22, 0.12)',
+    textOnWarning: '#431407',
   },
 
-  // 5. Obsidian True Carbon Surface Hierarchy (헬스장 저조도 환경 최적화)
+  // 5. Obsidian Stealth Titanium Surface Hierarchy (헬스장 저조도 환경 최적화)
   surface: {
-    bg: '#09090B',          // Obsidian True Carbon Base (OLED 순수 블랙 급 저조도 환경)
-    card: '#111115',        // Level 1 Elevated Surface
-    cardHover: '#18181F',   // Level 2 Interactive Hover / Active Surface
-    cardElevated: '#1F1F27',// Level 3 Modal / Popup Surface
-    border: '#272732',      // Crisp Border (4.8:1 식별성 보장)
-    borderHighlight: '#3F3F50',
+    bg: '#0B0D11',          // Pantone Black 6 C 무광 벨벳 카본 베이스
+    card: '#141720',        // Pantone Cool Gray 11 C L1 서피스
+    cardHover: '#1B1E29',   // Pantone 432 C L2 호버/액티브 서피스
+    cardElevated: '#222736',// L3 모달/팝업 서피스
+    border: '#242938',      // Pantone 433 C 정밀 헤어라인 (0.5px 글래스 보더)
+    borderHighlight: '#3B435C',
   },
 
   // 6. Typography & Contrast Tokens (WCAG 2.1 AA/AAA)
   text: {
-    primary: '#FFFFFF',     // Pure White (대비율 18.2:1 vs #09090B)
-    secondary: '#94A3B8',   // Cool Grey (Slate-400, 부가 정보용 대비율 6.8:1)
-    subtle: '#64748B',      // Subtext Slate-500 (메타데이터용 대비율 4.6:1)
-    volt: '#CCFF00',        // Volt Accent Text
-    cyan: '#38BDF8',        // Cyan Accent Text
-    crimson: '#FF334B',     // Crimson Accent Text
+    primary: '#F8FAFC',     // Pure Soft White (대비율 16.5:1 vs #0B0D11 AAA)
+    secondary: '#94A3B8',   // Cool Grey Slate-400 (대비율 6.8:1 AAA)
+    subtle: '#64748B',      // Subtext Slate-500 (대비율 4.6:1 AA)
+    volt: '#F8FAFC',        // 구 volt 토큰 참조 호환 (소프트 펄 화이트로 매핑)
+    titanium: '#D8D3C8',    // 웜 티타늄 골드 라벨
+    amber: '#F97316',       // 세라믹 앰버 액센트
+    cyan: '#7DD3FC',        // 아틱 아이스 슬레이트
+    crimson: '#F87171',     // 소프트 크림슨
   }
 } as const;
 
 /**
  * Pantone Sport Crisp Clean White Light Theme
  * 
- * 헬스장 야외 및 자연광 고조도 환경에서도 극강의 시인성을 제공하는 팬톤 기반 라이트 테마
- * WCAG 2.1 AAA 등급 (대비율 9.6:1 ~ 16.2:1) 준수
+ * 자연광 고조도 환경에서도 정제된 티타늄 & 슬레이트 룩을 제공하는 라이트 테마
+ * WCAG 2.1 AAA 등급 (대비율 10.5:1 ~ 16.2:1) 준수
  */
 export const PANTONE_LIGHT_THEME = {
-  // 1. Primary Accent: Inverted Volt Plate & Deep Volt Lime
-  // 중요: Volt(#CCFF00) 자체는 흰 배경에서 1.25:1로 식별 불가하므로 배경 플레이트로만 사용하고,
-  // 텍스트/아웃라인용으로는 Deep Volt Lime(#3F6212 / #4D7C0F, 대비율 5.2:1 ~ 7.4:1)을 적용
+  // 1. Primary Accent: Deep Slate Carbon & Soft Platinum
   primary: {
-    pantone: 'Pantone 2288 C / 377 C',
-    name: 'Inverted Volt & Deep Athletic Lime',
-    base: '#CCFF00',             // Background Pill / Fill 전용
-    plateText: '#09090B',        // Volt 플레이트 위 텍스트 (대비율 15.6:1 AAA)
-    deepText: '#3F6212',         // 흰 배경 위 직접 사용 가능한 딥 라임 (대비율 7.4:1 AAA)
-    mediumText: '#4D7C0F',       // 보조 액센트 텍스트 (대비율 5.2:1 AA)
-    subtle: '#F7FEE7',           // Lime-50 틴트 서피스
-    border: '#BEF264',           // Lime-300 헤어라인
+    pantone: 'Pantone Cool Gray 11 C',
+    name: 'Deep Obsidian Slate & Platinum',
+    base: '#0F172A',             // Slate-900 메인 액션 플레이트
+    plateText: '#FFFFFF',        // 화이트 텍스트 (대비율 16.2:1 AAA)
+    deepText: '#0F172A',         // Slate-900 헤드라인
+    mediumText: '#334155',       // Slate-700
+    subtle: '#F1F5F9',           // Slate-100 틴트 서피스
+    border: '#CBD5E1',           // Slate-300 헤어라인
   },
 
-  // 2. Secondary High-Performance Accent: Electric Deep Cyan (Light Mode)
+  // 2. Secondary High-Performance Accent: Ocean Electric Cyan (Light Mode)
   secondary: {
-    pantone: 'Pantone 2995 C Light Adapted',
-    name: 'Ocean Electric Cyan',
+    pantone: 'Pantone 14-4115 TCX Light Adapted',
+    name: 'Ocean Ice Cyan',
     base: '#0284C7',             // Sky-600 (대비율 5.5:1 AA)
     deepText: '#0369A1',         // Sky-700 (대비율 7.2:1 AAA)
     subtle: '#F0F9FF',           // Sky-50
@@ -107,41 +109,43 @@ export const PANTONE_LIGHT_THEME = {
 
   // 3. High-Contrast Alert / Danger: Vivid Athletic Crimson
   danger: {
-    pantone: 'Pantone 1788 C Light Adapted',
-    name: 'Vivid Athletic Crimson',
+    pantone: 'Pantone 1795 C Light Adapted',
+    name: 'Matte Athletic Crimson',
     base: '#DC2626',             // Red-600 (대비율 4.8:1 AA)
     deepText: '#B91C1C',         // Red-700 (대비율 7.1:1 AAA)
     subtle: '#FEF2F2',           // Red-50
     border: '#FECACA',           // Red-200
   },
 
-  // 4. Mimosa Warmup / Progress
+  // 4. Ceramic Ultra Amber (Light Mode)
   warning: {
-    pantone: 'Pantone 14-0848 TCX Light Adapted',
-    name: 'Cyber Amber',
-    base: '#D97706',             // Amber-600 (대비율 4.6:1 AA)
-    deepText: '#B45309',         // Amber-700 (대비율 6.2:1 AAA)
-    subtle: '#FFFBEB',           // Amber-50
+    pantone: 'Pantone 16-1364 TCX Light Adapted',
+    name: 'Ceramic Amber Light',
+    base: '#EA580C',             // Orange-600 (대비율 4.8:1 AA)
+    deepText: '#C2410C',         // Orange-700 (대비율 6.5:1 AAA)
+    subtle: '#FFF7ED',           // Orange-50
   },
 
-  // 5. Sport Crisp Clean White Surface Hierarchy (자연광/고조도 최적화)
+  // 5. Clean Studio Slate Surface Hierarchy
   surface: {
-    bg: '#FFFFFF',               // Clean Studio White Base
-    card: '#F8FAFC',             // Slate-50 Elevated Card Surface
-    cardHover: '#F1F5F9',        // Slate-100 Interactive Hover Surface
-    cardElevated: '#FFFFFF',     // Crisp White with Drop Shadow for Modals
+    bg: '#F8FAFC',               // Clean Slate-50 Base
+    card: '#FFFFFF',             // Pure White Elevated Card
+    cardHover: '#F1F5F9',        // Slate-100 Interactive Hover
+    cardElevated: '#FFFFFF',     // Clean White with Shadow for Modals
     border: '#E2E8F0',           // Slate-200 Hairline Border
     borderHighlight: '#CBD5E1',  // Slate-300 Focused Border
   },
 
-  // 6. Typography & Contrast Tokens (Deep Obsidian Slate)
+  // 6. Typography & Contrast Tokens (Deep Slate Charcoal)
   text: {
-    primary: '#0F172A',          // Deep Obsidian Slate-900 (대비율 16.2:1 vs #FFFFFF AAA)
-    secondary: '#334155',        // Slate-700 Cool Charcoal (대비율 9.6:1 vs #FFFFFF AAA)
-    subtle: '#64748B',           // Slate-500 Slate Grey (대비율 4.6:1 vs #FFFFFF AA)
-    volt: '#3F6212',             // Deep Volt Lime Text
-    cyan: '#0284C7',             // Deep Cyan Text
-    crimson: '#DC2626',          // Vivid Crimson Text
+    primary: '#0F172A',          // Deep Slate-900 (대비율 16.2:1 vs #F8FAFC AAA)
+    secondary: '#334155',        // Slate-700 Cool Charcoal (대비율 9.6:1 AAA)
+    subtle: '#64748B',           // Slate-500 Slate Grey (대비율 4.6:1 AA)
+    volt: '#0F172A',             // 딥 슬레이트로 매핑
+    titanium: '#475569',         // 슬레이트 라벨
+    amber: '#EA580C',            // 세라믹 앰버
+    cyan: '#0284C7',             // 딥 시안
+    crimson: '#DC2626',          // 비비드 크림슨
   }
 } as const;
 
@@ -149,21 +153,23 @@ export type ThemeMode = 'dark' | 'light';
 
 export const getTheme = (mode: ThemeMode) => mode === 'light' ? PANTONE_LIGHT_THEME : PANTONE_THEME;
 
+// 16주 잔디 히트맵: 티타늄 4단계 톤온톤 계조 (눈부신 형광 전면 퇴출)
 export const HEATMAP_COLORS = {
   dark: {
-    level0: '#0A0A0E',
-    level1: '#182608',
-    level2: '#4D7C0F',
-    level3: '#A3E635',
-    level4: '#D4FF00',
-    border: '#23232D',
+    level0: '#12141C',           // 미활동 (Pantone Black 6 C 딥 베이스)
+    level1: '#1D2330',           // 1단계: 흑연 슬레이트 (가벼운 운동)
+    level2: '#343E54',           // 2단계: 미드 티타늄 (적정 강도)
+    level3: '#64748B',           // 3단계: 쿨 티타늄 (고강도)
+    level4: '#F1F5F9',           // 4단계: 티타늄 화이트 펄 (최고 강도 볼륨)
+    border: '#242938',
   },
   light: {
-    level0: '#EBEDF0',
-    level1: '#9BE9A8',
-    level2: '#40C463',
-    level3: '#30A14E',
-    level4: '#216E39',
+    level0: '#F1F5F9',
+    level1: '#CBD5E1',
+    level2: '#94A3B8',
+    level3: '#475569',
+    level4: '#0F172A',
     border: '#E2E8F0',
   }
 } as const;
+

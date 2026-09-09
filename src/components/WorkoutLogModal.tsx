@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { IExerciseLog, IExerciseSet, IRecommendedWeight, WorkoutSession } from '../models/fitness';
 import { VolumeService } from '../services/calculator/VolumeService';
 import { X, Plus, Trash2, CheckCircle2, Dumbbell, Calendar, Clock, Flame, Check } from 'lucide-react';
-
 import { ThemeMode } from '../theme/pantone';
+import { TdsBadge, TdsButton } from './tds';
 
 interface WorkoutLogModalProps {
   isOpen: boolean;
@@ -100,7 +100,7 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
         if (ex.id !== exerciseId) return ex;
         const lastSet = ex.sets[ex.sets.length - 1];
         const newSet: IExerciseSet = {
-          id: `set-${Date.now()}`,
+          id: `s-${Date.now()}-${ex.sets.length + 1}`,
           setNumber: ex.sets.length + 1,
           weight: lastSet ? lastSet.weight : 60,
           reps: lastSet ? lastSet.reps : 10,
@@ -111,50 +111,27 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
     );
   };
 
-  const handleUpdateSet = (
-    exerciseId: string,
-    setId: string,
-    field: 'weight' | 'reps' | 'completed',
-    value: number | boolean
-  ) => {
-    setExercises(prev =>
-      prev.map(ex => {
-        if (ex.id !== exerciseId) return ex;
-        return {
-          ...ex,
-          sets: ex.sets.map(s => {
-            if (s.id !== setId) return s;
-            return { ...s, [field]: value };
-          })
-        };
-      })
-    );
-  };
-
-  const handleAdjustWeight = (exerciseId: string, setId: string, delta: number) => {
-    setExercises(prev =>
-      prev.map(ex => {
-        if (ex.id !== exerciseId) return ex;
-        return {
-          ...ex,
-          sets: ex.sets.map(s => {
-            if (s.id !== setId) return s;
-            return { ...s, weight: Math.max(0, Math.round((s.weight + delta) * 10) / 10) };
-          })
-        };
-      })
-    );
-  };
-
   const handleRemoveSet = (exerciseId: string, setId: string) => {
     setExercises(prev =>
       prev.map(ex => {
         if (ex.id !== exerciseId) return ex;
-        const remaining = ex.sets.filter(s => s.id !== setId);
-        return {
-          ...ex,
-          sets: remaining.map((s, idx) => ({ ...s, setNumber: idx + 1 }))
-        };
+        if (ex.sets.length <= 1) return ex;
+        const filtered = ex.sets.filter(s => s.id !== setId);
+        const renumbered = filtered.map((s, idx) => ({ ...s, setNumber: idx + 1 }));
+        return { ...ex, sets: renumbered };
+      })
+    );
+  };
+
+  const handleUpdateSet = (exerciseId: string, setId: string, field: 'weight' | 'reps' | 'completed', value: any) => {
+    setExercises(prev =>
+      prev.map(ex => {
+        if (ex.id !== exerciseId) return ex;
+        const updated = ex.sets.map(s => {
+          if (s.id !== setId) return s;
+          return { ...s, [field]: value };
+        });
+        return { ...ex, sets: updated };
       })
     );
   };
@@ -162,7 +139,7 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newSession: WorkoutSession = {
-      id: `workout-${Date.now()}`,
+      id: `session-${Date.now()}`,
       date,
       title: title || '오늘의 운동',
       durationMinutes: durationMinutes || 60,
@@ -175,53 +152,56 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        className={`w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border transition-colors ${
-          isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#121217] border-[#23232D] text-white'
+        className={`w-full max-w-2xl rounded-t-[28px] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border transition-all ${
+          isLight ? 'bg-white border-slate-100 text-slate-900' : 'bg-[#1C1C1E] border-[#2C2C2E] text-white'
         }`}
       >
         {/* Modal Header */}
-        <div className={`flex items-center justify-between p-4 border-b ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'}`}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#D4FF00] text-black flex items-center justify-center font-black shadow-md shadow-[#D4FF00]/30">
-              <Dumbbell className="w-4 h-4" />
+        <div className={`flex items-center justify-between p-5 border-b ${isLight ? 'border-slate-100' : 'border-[#2C2C2E]'}`}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#3182F6] flex items-center justify-center font-bold">
+              <Dumbbell className="w-5 h-5" />
             </div>
             <div>
-              <h2 className={`text-base font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>운동 일지 상세 작성</h2>
-              <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>종목별 중량(kg)과 반복횟수(reps)를 기입하면 볼륨이 자동 계산됩니다.</p>
+              <h2 className={`text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>운동 일지 작성</h2>
+              <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>종목별 중량과 횟수를 적으면 총 볼륨을 자동으로 계산해요</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className={`p-1.5 rounded-xl transition-all ${isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-200' : 'text-slate-400 hover:text-white hover:bg-[#181820]'}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
+            }`}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className={`block text-xs font-bold mb-1 flex items-center gap-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-                <Calendar className={`w-3.5 h-3.5 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
+              <label className={`block text-xs font-semibold mb-1.5 flex items-center gap-1.5 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                <Calendar className="w-3.5 h-3.5 text-[#3182F6]" />
                 운동 날짜
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className={`w-full rounded-xl px-3 py-2 text-xs font-black outline-none border transition-colors ${
+                className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none border transition-all ${
                   isLight
-                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
-                    : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                    ? 'bg-[#F2F4F6] border-transparent text-slate-900 focus:bg-white focus:border-[#3182F6]'
+                    : 'bg-[#252528] border-transparent text-white focus:border-[#3182F6]'
                 }`}
                 required
               />
             </div>
             <div>
-              <label className={`block text-xs font-bold mb-1 flex items-center gap-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+              <label className={`block text-xs font-semibold mb-1.5 flex items-center gap-1.5 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
                 <Flame className="w-3.5 h-3.5 text-amber-500" />
                 루틴 제목
               </label>
@@ -230,27 +210,27 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="예: 가슴 & 삼두 파워 데이"
-                className={`w-full rounded-xl px-3 py-2 text-xs font-black outline-none border transition-colors ${
+                className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none border transition-all ${
                   isLight
-                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
-                    : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                    ? 'bg-[#F2F4F6] border-transparent text-slate-900 focus:bg-white focus:border-[#3182F6]'
+                    : 'bg-[#252528] border-transparent text-white focus:border-[#3182F6]'
                 }`}
                 required
               />
             </div>
             <div>
-              <label className={`block text-xs font-bold mb-1 flex items-center gap-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-                <Clock className={`w-3.5 h-3.5 ${isLight ? 'text-sky-600' : 'text-[#38BDF8]'}`} />
+              <label className={`block text-xs font-semibold mb-1.5 flex items-center gap-1.5 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                <Clock className="w-3.5 h-3.5 text-[#00BFA5]" />
                 운동 시간 (분)
               </label>
               <input
                 type="number"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
-                className={`w-full rounded-xl px-3 py-2 text-xs font-black font-mono-num outline-none border transition-colors ${
+                className={`w-full rounded-xl px-3.5 py-2.5 text-xs font-bold font-mono-num outline-none border transition-all ${
                   isLight
-                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
-                    : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                    ? 'bg-[#F2F4F6] border-transparent text-slate-900 focus:bg-white focus:border-[#3182F6]'
+                    : 'bg-[#252528] border-transparent text-white focus:border-[#3182F6]'
                 }`}
               />
             </div>
@@ -258,23 +238,23 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
 
           {/* Realtime Volume Preview Banner */}
           <div
-            className={`border rounded-2xl p-3.5 flex items-center justify-between shadow-inner transition-colors ${
+            className={`rounded-2xl p-4 sm:p-5 flex items-center justify-between transition-colors border ${
               isLight
-                ? 'bg-lime-50/70 border-lime-300'
-                : 'bg-[#0A0A0E] border-[#D4FF00]/40'
+                ? 'bg-blue-50/50 border-blue-100'
+                : 'bg-[#252528] border-transparent'
             }`}
           >
             <div>
-              <span className={`text-[10px] uppercase font-black tracking-wider ${isLight ? 'text-lime-800' : 'text-[#D4FF00]'}`}>
+              <span className="text-xs font-semibold text-[#3182F6] block mb-1">
                 실시간 세션 총 볼륨
               </span>
-              <div className={`text-xl sm:text-2xl font-black font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <div className={`text-2xl sm:text-3xl font-bold font-mono-num ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {VolumeService.formatKg(currentTotalVolume)}
               </div>
             </div>
-            <div className={`text-right text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+            <div className={`text-right text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               총 {exercises.length}개 종목 ·{' '}
-              <strong className={`font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
+              <strong className="font-bold font-mono-num text-[#3182F6]">
                 {exercises.reduce((sum, e) => sum + e.sets.filter(s => s.completed).length, 0)}세트
               </strong>
             </div>
@@ -282,8 +262,8 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
 
           {/* Exercise List */}
           <div className="space-y-4">
-            <h3 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
-              수행 종목 및 세트 (중량 x 횟수)
+            <h3 className={`text-xs font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              수행 종목 및 세트
             </h3>
 
             {exercises.map((ex, exIdx) => {
@@ -291,26 +271,24 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
               return (
                 <div
                   key={ex.id}
-                  className={`border rounded-2xl p-3.5 space-y-3 transition-colors ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0A0E] border-[#23232D]'
+                  className={`rounded-2xl p-4 space-y-3 transition-colors border ${
+                    isLight ? 'bg-[#F8F9FA] border-slate-100' : 'bg-[#252528] border-transparent'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className={`w-5 h-5 rounded-lg text-xs flex items-center justify-center font-black ${
-                        isLight ? 'bg-lime-200 text-lime-900' : 'bg-[#181820] text-[#D4FF00]'
+                      <span className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-bold ${
+                        isLight ? 'bg-blue-100 text-[#3182F6]' : 'bg-[#1C1C1E] text-[#3182F6]'
                       }`}>
                         {exIdx + 1}
                       </span>
-                      <span className={`font-extrabold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{ex.exerciseName}</span>
-                      <span className={`text-[10px] uppercase px-2 py-0.5 rounded border ${
-                        isLight ? 'bg-white text-slate-600 border-slate-200' : 'bg-[#181820] text-slate-400 border-[#23232D]'
-                      }`}>
+                      <span className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{ex.exerciseName}</span>
+                      <TdsBadge variant="weak" color="elephant" size="xsmall">
                         {ex.category}
-                      </span>
+                      </TdsBadge>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-black font-mono-num ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`}>
+                      <span className="text-xs font-bold font-mono-num text-[#3182F6]">
                         {VolumeService.formatKg(exVol)}
                       </span>
                       {exercises.length > 1 && (
@@ -319,146 +297,106 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
                           onClick={() => handleRemoveExercise(ex.id)}
                           className="text-slate-400 hover:text-rose-500 p-1"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Set Rows */}
+                  {/* Sets */}
                   <div className="space-y-2">
-                    {ex.sets.map(s => (
+                    {ex.sets.map((set) => (
                       <div
-                        key={s.id}
-                        className={`border rounded-xl p-2.5 flex flex-col gap-2 transition-colors ${
-                          isLight ? 'bg-white border-slate-200' : 'bg-[#121217] border-[#23232D]'
+                        key={set.id}
+                        className={`flex items-center gap-2 p-2 rounded-xl transition-colors ${
+                          isLight ? 'bg-white' : 'bg-[#1C1C1E]'
                         }`}
                       >
-                        <div className="flex justify-between items-center text-xs">
-                          <span className={`font-bold ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Set #{s.setNumber}</span>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleAdjustWeight(ex.id, s.id, -2.5)}
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors ${
-                                isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300' : 'bg-[#181820] text-slate-300 border-[#23232D]'
-                              }`}
-                            >
-                              -2.5kg
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAdjustWeight(ex.id, s.id, 2.5)}
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors ${
-                                isLight ? 'bg-lime-50 hover:bg-lime-100 text-lime-800 border-lime-300' : 'bg-[#181820] text-[#D4FF00] border-[#23232D]'
-                              }`}
-                            >
-                              +2.5kg
-                            </button>
-                            {ex.sets.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSet(ex.id, s.id)}
-                                className="p-0.5 text-slate-400 hover:text-rose-500 ml-1"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
+                        <span className="text-xs font-bold w-12 text-slate-400">
+                          #{set.setNumber}
+                        </span>
+
+                        <div className="flex-1 flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={set.weight}
+                            onChange={(e) => handleUpdateSet(ex.id, set.id, 'weight', parseFloat(e.target.value) || 0)}
+                            className={`w-20 rounded-lg px-2.5 py-1.5 text-xs font-bold font-mono-num outline-none border ${
+                              isLight ? 'bg-slate-50 border-slate-200 text-slate-900' : 'bg-[#252528] border-transparent text-white'
+                            }`}
+                            placeholder="kg"
+                          />
+                          <span className="text-xs text-slate-400">kg</span>
+
+                          <input
+                            type="number"
+                            value={set.reps}
+                            onChange={(e) => handleUpdateSet(ex.id, set.id, 'reps', parseInt(e.target.value) || 0)}
+                            className={`w-16 rounded-lg px-2.5 py-1.5 text-xs font-bold font-mono-num outline-none border ${
+                              isLight ? 'bg-slate-50 border-slate-200 text-slate-900' : 'bg-[#252528] border-transparent text-white'
+                            }`}
+                            placeholder="회"
+                          />
+                          <span className="text-xs text-slate-400">회</span>
                         </div>
 
-                        <div className="grid grid-cols-12 gap-2 items-center">
-                          <div className="col-span-5">
-                            <div className="relative">
-                              <input
-                                type="number"
-                                step="0.5"
-                                value={s.weight}
-                                onChange={(e) =>
-                                  handleUpdateSet(ex.id, s.id, 'weight', parseFloat(e.target.value) || 0)
-                                }
-                                className={`w-full rounded-lg px-2.5 py-1 text-xs font-black font-mono-num outline-none border transition-colors ${
-                                  isLight
-                                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
-                                    : 'bg-[#181820] border-[#23232D] text-white focus:border-[#D4FF00]'
-                                }`}
-                              />
-                              <span className={`absolute right-2 top-1 text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>kg</span>
-                            </div>
-                          </div>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateSet(ex.id, set.id, 'completed', !set.completed)}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                            set.completed
+                              ? 'bg-[#3182F6] text-white'
+                              : isLight ? 'bg-slate-100 text-slate-300' : 'bg-[#252528] text-slate-600'
+                          }`}
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
 
-                          <div className="col-span-5">
-                            <div className="relative">
-                              <input
-                                type="number"
-                                value={s.reps}
-                                onChange={(e) =>
-                                  handleUpdateSet(ex.id, s.id, 'reps', parseInt(e.target.value) || 0)
-                                }
-                                className={`w-full rounded-lg px-2.5 py-1 text-xs font-black font-mono-num outline-none border transition-colors ${
-                                  isLight
-                                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
-                                    : 'bg-[#181820] border-[#23232D] text-white focus:border-[#D4FF00]'
-                                }`}
-                              />
-                              <span className={`absolute right-2 top-1 text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>reps</span>
-                            </div>
-                          </div>
-
-                          <div className="col-span-2 flex justify-center">
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateSet(ex.id, s.id, 'completed', !s.completed)}
-                              className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                                s.completed
-                                  ? 'bg-[#D4FF00] text-black shadow-md'
-                                  : isLight
-                                  ? 'bg-slate-100 border border-slate-300 text-slate-400'
-                                  : 'bg-[#181820] border border-[#23232D] text-slate-600'
-                              }`}
-                            >
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
-                            </button>
-                          </div>
-                        </div>
+                        {ex.sets.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSet(ex.id, set.id)}
+                            className="p-1 text-slate-400 hover:text-rose-500"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     ))}
-                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleAddSet(ex.id)}
-                    className={`w-full py-1.5 text-xs font-bold rounded-xl border border-dashed transition-all flex items-center justify-center gap-1 ${
-                      isLight
-                        ? 'text-slate-600 hover:text-lime-700 bg-white hover:bg-slate-50 border-slate-300 hover:border-lime-500'
-                        : 'text-slate-300 hover:text-[#D4FF00] hover:bg-[#181820] border-[#23232D] hover:border-[#D4FF00]/50'
-                    }`}
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>세트 추가</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddSet(ex.id)}
+                      className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 border border-dashed ${
+                        isLight ? 'border-slate-200 text-slate-500 hover:bg-white' : 'border-[#333D4B] text-slate-400 hover:bg-[#1C1C1E]'
+                      }`}
+                    >
+                      <Plus className="w-3.5 h-3.5 text-[#3182F6]" />
+                      <span>세트 추가</span>
+                    </button>
+                  </div>
                 </div>
               );
             })}
 
-            {/* Quick Add Exercise */}
+            {/* Quick Add Exercise Chips */}
             <div>
-              <label className={`block text-[11px] font-bold mb-2 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                + 새 종목 추가:
-              </label>
+              <span className={`block text-xs font-semibold mb-2 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                빠른 종목 추가
+              </span>
               <div className="flex flex-wrap gap-1.5">
                 {DEFAULT_EXERCISE_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
                     type="button"
                     onClick={() => handleAddExercise(opt)}
-                    className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all flex items-center gap-1 ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1 ${
                       isLight
-                        ? 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 hover:text-slate-900'
-                        : 'bg-[#0A0A0E] hover:bg-[#181820] border-[#23232D] hover:border-slate-500 text-slate-300 hover:text-white'
+                        ? 'bg-[#F2F4F6] hover:bg-slate-200 text-slate-700'
+                        : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
                     }`}
                   >
-                    <Plus className={`w-3 h-3 ${isLight ? 'text-lime-700' : 'text-[#D4FF00]'}`} />
+                    <Plus className="w-3 h-3 text-[#3182F6]" />
                     <span>{opt.name}</span>
                   </button>
                 ))}
@@ -468,7 +406,7 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
 
           {/* Memo textarea */}
           <div>
-            <label className={`block text-xs font-bold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+            <label className={`block text-xs font-semibold mb-1.5 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
               운동 메모 (컨디션, 특이사항)
             </label>
             <textarea
@@ -476,34 +414,33 @@ export const WorkoutLogModal: React.FC<WorkoutLogModalProps> = ({
               onChange={(e) => setMemo(e.target.value)}
               placeholder="오늘 벤치프레스 세트 증량 성공, 어깨 가동범위 양호..."
               rows={2}
-              className={`w-full rounded-xl px-3 py-2 text-xs outline-none border transition-colors ${
+              className={`w-full rounded-xl px-3.5 py-2.5 text-xs outline-none border transition-all ${
                 isLight
-                  ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-lime-600'
-                  : 'bg-[#0A0A0E] border-[#23232D] text-white focus:border-[#D4FF00]'
+                  ? 'bg-[#F2F4F6] border-transparent text-slate-900 focus:bg-white focus:border-[#3182F6]'
+                  : 'bg-[#252528] border-transparent text-white focus:border-[#3182F6]'
               }`}
             />
           </div>
 
           {/* Footer Submit */}
-          <div className={`pt-2 flex items-center justify-end gap-2 border-t ${isLight ? 'border-slate-200' : 'border-[#23232D]'}`}>
-            <button
-              type="button"
+          <div className={`pt-3 flex items-center justify-end gap-3 border-t ${isLight ? 'border-slate-100' : 'border-[#2C2C2E]'}`}>
+            <TdsButton
+              variant="weak"
+              size="medium"
               onClick={onClose}
-              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                isLight
-                  ? 'text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border-slate-300'
-                  : 'text-slate-300 hover:text-white bg-[#0A0A0E] hover:bg-[#181820] border-[#23232D]'
-              }`}
             >
-              취소
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs font-black text-black bg-[#D4FF00] hover:bg-[#C2EB00] shadow-md shadow-[#D4FF00]/20 active:scale-95 transition-all flex items-center gap-1.5"
+              <span>취소</span>
+            </TdsButton>
+            <TdsButton
+              variant="primary"
+              size="medium"
+              onClick={() => {}}
             >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>기록 저장 및 볼륨 반영</span>
-            </button>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>기록 저장 및 볼륨 반영</span>
+              </div>
+            </TdsButton>
           </div>
         </form>
       </div>
