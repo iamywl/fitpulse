@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Volume2, VolumeX, Play, Pause, RotateCcw, Sparkles } from 'lucide-react';
+import { X, Volume2, VolumeX, Play, Pause, RotateCcw, Sparkles, Bell, BellOff } from 'lucide-react';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
+import { WebNotificationService } from '../services/notification/WebNotificationService';
 import { ThemeMode } from '../theme/pantone';
 import { TdsBadge, TdsButton } from './tds';
 import { INextSetRecommendation } from '../models/fitness';
@@ -37,6 +38,14 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
   const [secondsLeft, setSecondsLeft] = useState<number>(initialSeconds);
   const [isRunning, setIsRunning] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(AudioAlertService.getIsMuted());
+  const [notificationPerm, setNotificationPerm] = useState<NotificationPermission | 'unsupported'>(
+    WebNotificationService.getPermission()
+  );
+
+  const handleRequestNotification = async () => {
+    const granted = await WebNotificationService.requestPermission();
+    setNotificationPerm(granted ? 'granted' : 'denied');
+  };
 
   // Reset when opened with new initialSeconds
   useEffect(() => {
@@ -44,6 +53,7 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
       setTotalSeconds(initialSeconds);
       setSecondsLeft(initialSeconds);
       setIsRunning(true);
+      setNotificationPerm(WebNotificationService.getPermission());
     }
   }, [isOpen, initialSeconds]);
 
@@ -60,6 +70,10 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
 
     if (secondsLeft <= 0) {
       AudioAlertService.playRestFinished();
+      WebNotificationService.notifyRestComplete({
+        exerciseName,
+        nextSetNumber: completedSetNumber + 1,
+      });
       setIsRunning(false);
       return;
     }
@@ -69,6 +83,10 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
         if (prev <= 1) {
           clearInterval(timer);
           AudioAlertService.playRestFinished();
+          WebNotificationService.notifyRestComplete({
+            exerciseName,
+            nextSetNumber: completedSetNumber + 1,
+          });
           setIsRunning(false);
           return 0;
         }
@@ -81,7 +99,7 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, runningOrTimeKey(isRunning, secondsLeft)]);
+  }, [isOpen, runningOrTimeKey(isRunning, secondsLeft), exerciseName, completedSetNumber]);
 
   function runningOrTimeKey(r: boolean, s: number) {
     return `${r}-${s > 0}`;
@@ -125,18 +143,37 @@ export const RestTimerModal: React.FC<RestTimerModalProps> = ({
             : 'bg-[#1C1C1E] border-[#2C2C2E] text-white shadow-2xl'
         }`}
       >
-        {/* Top bar: sound toggle & close */}
+        {/* Top bar: sound toggle, web push notification & close */}
         <div className="w-full flex items-center justify-between mb-2">
-          <button
-            type="button"
-            onClick={toggleMute}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
-            }`}
-            title={isMuted ? '음소거 해제' : '소리 끄기'}
-          >
-            {isMuted ? <VolumeX className="w-4 h-4 text-[#F04452]" /> : <Volume2 className="w-4 h-4 text-[#00BFA5]" />}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={toggleMute}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
+              }`}
+              title={isMuted ? '음소거 해제' : '소리 끄기'}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4 text-[#F04452]" /> : <Volume2 className="w-4 h-4 text-[#00BFA5]" />}
+            </button>
+
+            {notificationPerm !== 'unsupported' && (
+              <button
+                type="button"
+                onClick={handleRequestNotification}
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                  notificationPerm === 'granted'
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-[#3182F6]'
+                    : isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-400'
+                    : 'bg-[#252528] hover:bg-[#333D4B] text-slate-400'
+                }`}
+                title={notificationPerm === 'granted' ? '웹 알림 활성화됨' : '백그라운드 웹 알림 켜기'}
+              >
+                {notificationPerm === 'granted' ? <Bell className="w-4 h-4 text-[#3182F6]" /> : <BellOff className="w-4 h-4" />}
+              </button>
+            )}
+          </div>
 
           <TdsBadge variant="weak" color="blue" size="small">
             휴식 타이머

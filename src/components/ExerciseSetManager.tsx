@@ -8,6 +8,8 @@ import { ThemeMode } from '../theme/pantone';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
 import { BarbellPlateModal } from './BarbellPlateModal';
+import { CustomExerciseCreateModal } from './CustomExerciseCreateModal';
+import { ExerciseLibraryService } from '../services/exercise/ExerciseLibraryService';
 import { TdsBadge, TdsButton } from './tds';
 
 const RPE_OPTIONS = [6, 7, 8, 9, 10];
@@ -26,16 +28,6 @@ interface ExerciseSetManagerProps {
   } | null;
 }
 
-const EXERCISE_OPTIONS = [
-  { id: 'bench-press', name: '바벨 벤치프레스', category: 'chest' as const },
-  { id: 'squat', name: '바벨 백스쿼트', category: 'legs' as const },
-  { id: 'deadlift', name: '컨벤셔널 데드리프트', category: 'back' as const },
-  { id: 'ohp', name: '오버헤드 프레스 (OHP)', category: 'shoulders' as const },
-  { id: 'barbell-row', name: '바벨 로우', category: 'back' as const },
-  { id: 'incline-db-press', name: '인클라인 덤벨 프레스', category: 'chest' as const },
-  { id: 'lat-pulldown', name: '랫 풀다운', category: 'back' as const },
-];
-
 export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
   workouts,
   onSaveExerciseSets,
@@ -45,9 +37,15 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
 }) => {
   const isLight = themeMode === 'light';
 
+  // 운동 라이브러리 (기본 + 커스텀 종목)
+  const [exerciseList, setExerciseList] = useState(() => ExerciseLibraryService.getAllExercises());
+
   const [selectedExId, setSelectedExId] = useState<string>(
-    selectedExerciseOverride?.exerciseId || 'bench-press'
+    selectedExerciseOverride?.exerciseId || exerciseList[0]?.id || 'lib-bench-press'
   );
+
+  // 커스텀 종목 등록 모달 state
+  const [isCreateExerciseModalOpen, setIsCreateExerciseModalOpen] = useState<boolean>(false);
 
   // 현재 종목 세트 상태
   const [sets, setSets] = useState<IExerciseSet[]>([
@@ -69,7 +67,11 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
   const [plateModalWeight, setPlateModalWeight] = useState<number>(80);
   const [targetSetIdForPlate, setTargetSetIdForPlate] = useState<string | null>(null);
 
-  const currentExercise = EXERCISE_OPTIONS.find(e => e.id === selectedExId) || EXERCISE_OPTIONS[0];
+  const currentExercise = exerciseList.find(e => e.id === selectedExId) || exerciseList[0] || {
+    id: 'lib-bench-press',
+    name: '바벨 벤치프레스',
+    category: 'chest' as const,
+  };
 
   const exerciseVolume = sets.reduce((sum, s) => s.completed ? sum + s.weight * s.reps : sum, 0);
   const best1RM = sets.reduce((max, s) => {
@@ -229,22 +231,34 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
           </h2>
         </div>
 
-        {/* Exercise Selector */}
-        <select
-          value={selectedExId}
-          onChange={(e) => setSelectedExId(e.target.value)}
-          className={`text-xs sm:text-sm font-bold rounded-xl px-3.5 py-2.5 outline-none cursor-pointer border transition-all ${
-            isLight
-              ? 'bg-[#F2F4F6] border-transparent text-slate-900 focus:bg-white focus:border-[#3182F6]'
-              : 'bg-[#252528] border-transparent text-white focus:border-[#3182F6]'
-          }`}
-        >
-          {EXERCISE_OPTIONS.map(opt => (
-            <option key={opt.id} value={opt.id}>
-              {opt.name} ({opt.category})
-            </option>
-          ))}
-        </select>
+        {/* Exercise Selector & Add Custom Button */}
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedExId}
+            onChange={(e) => setSelectedExId(e.target.value)}
+            className={`text-xs sm:text-sm font-bold rounded-xl px-3.5 py-2.5 outline-none cursor-pointer border transition-all max-w-[210px] sm:max-w-xs ${
+              isLight
+                ? 'bg-[#F2F4F6] border-transparent text-slate-900 focus:bg-white focus:border-[#3182F6]'
+                : 'bg-[#252528] border-transparent text-white focus:border-[#3182F6]'
+            }`}
+          >
+            {exerciseList.map(opt => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name} ({opt.category})
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setIsCreateExerciseModalOpen(true)}
+            className="flex items-center gap-1 px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#3182F6] hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold transition-all whitespace-nowrap min-h-[40px]"
+            title="새 운동 종목 등록"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">종목 등록</span>
+          </button>
+        </div>
       </div>
 
       {/* Summary Badges */}
@@ -708,6 +722,17 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
           }
         }}
         themeMode={themeMode}
+      />
+
+      <CustomExerciseCreateModal
+        isOpen={isCreateExerciseModalOpen}
+        onClose={() => setIsCreateExerciseModalOpen(false)}
+        themeMode={themeMode}
+        onExerciseCreated={(newEx) => {
+          const updated = ExerciseLibraryService.getAllExercises();
+          setExerciseList(updated);
+          setSelectedExId(newEx.id);
+        }}
       />
     </div>
   );

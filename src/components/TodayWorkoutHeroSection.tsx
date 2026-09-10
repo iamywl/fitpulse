@@ -18,9 +18,11 @@ import {
   Plus,
   Dumbbell,
   X,
-  Repeat
+  Repeat,
+  Camera
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { WorkoutCardCanvasService } from '../services/share/WorkoutCardCanvasService';
 
 interface TodayWorkoutHeroSectionProps {
   workouts: WorkoutSession[];
@@ -57,6 +59,23 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
 
   const [isEditingAfterComplete, setIsEditingAfterComplete] = useState<boolean>(false);
   const isTodayCompleted = !!todayWorkoutSession && !isEditingAfterComplete;
+
+  // Instagram Story Workout Card Download State
+  const [isDownloadingCard, setIsDownloadingCard] = useState<boolean>(false);
+
+  const handleDownloadStoryCard = async () => {
+    if (!todayWorkoutSession) return;
+    setIsDownloadingCard(true);
+    try {
+      await WorkoutCardCanvasService.downloadWorkoutStoryImage(todayWorkoutSession);
+      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+    } catch (e) {
+      console.error(e);
+      alert('오운완 카드 이미지 생성 중 오류가 발생했습니다.');
+    } finally {
+      setIsDownloadingCard(false);
+    }
+  };
 
   // Selected Active Exercise inside today's workout
   const [activeExerciseIndex, setActiveExerciseIndex] = useState<number>(0);
@@ -534,25 +553,35 @@ export const TodayWorkoutHeroSection: React.FC<TodayWorkoutHeroSectionProps> = (
 
           {/* Action CTAs: In Mobile View, STRICTLY vertical stack with full width */}
           <div className={`flex ${isMobileView ? 'flex-col' : 'flex-col sm:flex-row'} items-stretch justify-center gap-2.5 w-full`}>
+            <button
+              type="button"
+              onClick={handleDownloadStoryCard}
+              disabled={isDownloadingCard}
+              className="min-h-[44px] px-4 py-2.5 rounded-2xl font-black text-xs sm:text-sm bg-gradient-to-r from-[#3182F6] to-[#00BFA5] text-white shadow-md hover:opacity-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 flex-1 disabled:opacity-50"
+            >
+              <Camera className="w-4 h-4 text-white" />
+              <span>{isDownloadingCard ? '고화질 카드 렌더링 중...' : '📸 오운완 인스타 카드 저장'}</span>
+            </button>
+
             {onNavigateTab && (
               <TdsButton
                 size="medium"
                 variant="primary"
-                fullWidth
+                fullWidth={isMobileView}
                 onClick={() => onNavigateTab('analytics')}
                 leftIcon={<Sparkles className="w-4 h-4" />}
               >
-                성장 분석 보러가기
+                성장 분석
               </TdsButton>
             )}
             <TdsButton
               size="medium"
               variant="secondary"
-              fullWidth
+              fullWidth={isMobileView}
               isDark={isDark}
               onClick={() => setIsEditingAfterComplete(true)}
             >
-              기록 수정하기
+              기록 수정
             </TdsButton>
           </div>
         </div>

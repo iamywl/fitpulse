@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { IWeeklySplitDay, IWeeklySplitExercise } from '../models/fitness';
 import { ROUTINE_PRESETS, RoutinePresetType } from '../data/routinePresets';
-import { MASTER_EXERCISE_LIBRARY, IMasterExercise } from '../data/exerciseLibrary';
+import { IMasterExercise } from '../data/exerciseLibrary';
+import { ExerciseLibraryService } from '../services/exercise/ExerciseLibraryService';
+import { CustomExerciseCreateModal } from './CustomExerciseCreateModal';
 import { RoutineService } from '../services/routine/RoutineService';
 import { ThemeMode } from '../theme/pantone';
 import { 
@@ -55,7 +57,9 @@ export const RoutineBuilderModal: React.FC<RoutineBuilderModalProps> = ({
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(1);
 
   // Exercise Library Drawer / Picker state
+  const [exerciseLibrary, setExerciseLibrary] = useState<IMasterExercise[]>(() => ExerciseLibraryService.getAllExercises());
   const [isExercisePickerOpen, setIsExercisePickerOpen] = useState<boolean>(false);
+  const [isCustomExerciseModalOpen, setIsCustomExerciseModalOpen] = useState<boolean>(false);
   const [exerciseSearch, setExerciseSearch] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -211,8 +215,8 @@ export const RoutineBuilderModal: React.FC<RoutineBuilderModalProps> = ({
     onClose();
   };
 
-  // Filter master library exercises
-  const filteredLibrary = MASTER_EXERCISE_LIBRARY.filter(item => {
+  // Filter master & custom library exercises
+  const filteredLibrary = exerciseLibrary.filter(item => {
     const matchSearch = item.name.toLowerCase().includes(exerciseSearch.toLowerCase()) ||
                         item.targetMuscle.toLowerCase().includes(exerciseSearch.toLowerCase());
     const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
@@ -643,19 +647,29 @@ export const RoutineBuilderModal: React.FC<RoutineBuilderModalProps> = ({
             isLight ? 'bg-white border-slate-100 text-slate-900' : 'bg-[#1C1C1E] border-[#2C2C2E] text-white'
           }`}>
             <div className={`p-4 border-b flex items-center justify-between ${isLight ? 'border-slate-100' : 'border-[#2C2C2E]'}`}>
-              <h3 className="text-sm font-bold flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <Dumbbell className="w-4 h-4 text-[#3182F6]" />
-                <span>운동 종목 선택</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsExercisePickerOpen(false)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                  isLight ? 'bg-slate-100 text-slate-600' : 'bg-[#252528] text-slate-300'
-                }`}
-              >
-                <X className="w-4 h-4" />
-              </button>
+                <h3 className="text-sm font-bold">운동 종목 선택</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomExerciseModalOpen(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#3182F6] hover:bg-blue-100 dark:hover:bg-blue-900/50 text-xs font-bold transition-all min-h-[36px]"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>직접 등록</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsExercisePickerOpen(false)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    isLight ? 'bg-slate-100 text-slate-600' : 'bg-[#252528] text-slate-300'
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Search & Category Chips */}
@@ -730,6 +744,18 @@ export const RoutineBuilderModal: React.FC<RoutineBuilderModalProps> = ({
           </div>
         </div>
       )}
+
+      <CustomExerciseCreateModal
+        isOpen={isCustomExerciseModalOpen}
+        onClose={() => setIsCustomExerciseModalOpen(false)}
+        themeMode={themeMode}
+        onExerciseCreated={(newEx) => {
+          const updated = ExerciseLibraryService.getAllExercises();
+          setExerciseLibrary(updated);
+          handleAddExerciseFromLibrary(newEx);
+          setIsExercisePickerOpen(false);
+        }}
+      />
     </div>
   );
 };
