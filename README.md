@@ -253,6 +253,7 @@ FitPulse는 체계적인 문서화와 단일 진실 공급원(Single Source of T
 
 | 문서명 | 경로 | 주요 내용 |
 |---|---|---|
+| **무료($0) 배포 및 운영 가이드** | [`docs/ZERO_COST_OPERATIONS_GUIDE.md`](file:///c:/Users/SSAFY/Desktop/project_heathcare/docs/ZERO_COST_OPERATIONS_GUIDE.md) | MAU 100명 기준 영구 월 0원 Netlify/PWA 배포 및 모바일 무료 설치 전략 |
 | **모바일 크로스 플랫폼 전략 보고서** | [`docs/CROSS_PLATFORM_STRATEGY.md`](file:///c:/Users/SSAFY/Desktop/project_heathcare/docs/CROSS_PLATFORM_STRATEGY.md) | iOS/Android 양대 마켓 동시 진출을 위한 Capacitor/PWA/RN 심층 비교 및 로드맵 |
 | **시스템 아키텍처 명세서** | [`docs/ARCHITECTURE.md`](file:///c:/Users/SSAFY/Desktop/project_heathcare/docs/ARCHITECTURE.md) | 계층형 클린 아키텍처, SOLID 5원칙 분석, 서비스 레이어 매핑, Web Native API 연동 |
 | **기능 상세 명세서** | [`docs/FEATURES.md`](file:///c:/Users/SSAFY/Desktop/project_heathcare/docs/FEATURES.md) | Phase 1 킬러 기능 5종 + 핵심 기반 기능 유저 저니, 입출력 스펙, 엣지 케이스 |
