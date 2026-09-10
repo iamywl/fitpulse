@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { IWeeklySplitDay } from '../models/fitness';
 import { DEFAULT_WEEKLY_SPLIT } from '../data/splitRoutineData';
+import { RoutineService } from '../services/routine/RoutineService';
 import { 
   CalendarDays, 
   Clock, 
@@ -9,7 +10,9 @@ import {
   Dumbbell, 
   Play,
   RotateCcw,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Share2,
+  CheckCheck
 } from 'lucide-react';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
@@ -67,6 +70,20 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
   const [timerSetNumber, setTimerSetNumber] = useState<number>(1);
   const [timerExerciseName, setTimerExerciseName] = useState<string>('운동');
   const [timerRestDuration, setTimerRestDuration] = useState<number>(90);
+
+  // Quick Copy Feedback State
+  const [copiedFeedback, setCopiedFeedback] = useState<boolean>(false);
+
+  const handleCopyRoutineText = async () => {
+    const text = RoutineService.exportRoutineToText(splitList);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedFeedback(true);
+      setTimeout(() => setCopiedFeedback(false), 2500);
+    } catch {
+      // fallback
+    }
+  };
 
   // Toggle exercise completion with Sound and Rest Timer Trigger
   const handleToggleExercise = (exerciseId: string) => {
@@ -141,16 +158,34 @@ export const WeeklySplitRoutineSection: React.FC<WeeklySplitRoutineSectionProps>
           </div>
         </div>
 
-        {/* Action: Routine Builder */}
-        <TdsButton
-          size="small"
-          variant="secondary"
-          isDark={isDark}
-          onClick={() => setIsBuilderOpen(true)}
-          leftIcon={<SlidersHorizontal className="w-3.5 h-3.5" />}
-        >
-          루틴 설정
-        </TdsButton>
+        {/* Action: Routine Share & Builder */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={handleCopyRoutineText}
+            className={`min-h-[36px] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 border ${
+              copiedFeedback
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 border-emerald-300'
+                : isDark
+                ? 'bg-[#252528] text-slate-300 border-[#333D4B] hover:bg-[#333D4B] hover:text-white'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
+            title="이번 주 전체 루틴 텍스트 복사"
+          >
+            {copiedFeedback ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 text-[#3182F6]" />}
+            <span>{copiedFeedback ? '복사됨!' : '공유'}</span>
+          </button>
+
+          <TdsButton
+            size="small"
+            variant="secondary"
+            isDark={isDark}
+            onClick={() => setIsBuilderOpen(true)}
+            leftIcon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+          >
+            루틴 설정
+          </TdsButton>
+        </div>
       </div>
 
       {/* 7-Day Horizontal Strip Selector */}

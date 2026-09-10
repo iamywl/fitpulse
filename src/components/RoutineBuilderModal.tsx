@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { IWeeklySplitDay, IWeeklySplitExercise } from '../models/fitness';
 import { ROUTINE_PRESETS, RoutinePresetType } from '../data/routinePresets';
 import { MASTER_EXERCISE_LIBRARY, IMasterExercise } from '../data/exerciseLibrary';
+import { RoutineService } from '../services/routine/RoutineService';
 import { ThemeMode } from '../theme/pantone';
 import { 
   X, 
@@ -15,7 +16,10 @@ import {
   ArrowDown, 
   Dumbbell, 
   Search, 
-  Layers
+  Layers,
+  Share2,
+  Copy,
+  CheckCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { TdsBadge, TdsButton } from './tds';
@@ -54,6 +58,33 @@ export const RoutineBuilderModal: React.FC<RoutineBuilderModalProps> = ({
   const [isExercisePickerOpen, setIsExercisePickerOpen] = useState<boolean>(false);
   const [exerciseSearch, setExerciseSearch] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  // Copy Feedback Toast State
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+
+  const handleCopyText = async () => {
+    const text = RoutineService.exportRoutineToText(workingSplit);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyFeedback('루틴 텍스트가 복사되었어요! 카카오톡이나 메모장에 붙여넣어 보세요.');
+      setTimeout(() => setCopyFeedback(null), 3000);
+    } catch {
+      setCopyFeedback('클립보드 복사에 실패했습니다.');
+      setTimeout(() => setCopyFeedback(null), 2500);
+    }
+  };
+
+  const handleCopyJSON = async () => {
+    const jsonStr = RoutineService.exportRoutineToJSON(workingSplit);
+    try {
+      await navigator.clipboard.writeText(jsonStr);
+      setCopyFeedback('루틴 JSON 데이터가 클립보드에 복사되었어요.');
+      setTimeout(() => setCopyFeedback(null), 3000);
+    } catch {
+      setCopyFeedback('클립보드 복사에 실패했습니다.');
+      setTimeout(() => setCopyFeedback(null), 2500);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -212,17 +243,42 @@ export const RoutineBuilderModal: React.FC<RoutineBuilderModalProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-              isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
-            }`}
-            aria-label="닫기"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleCopyText}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300 border-[#333D4B]'
+              }`}
+              title="카카오톡/메모장 공유용 텍스트 복사"
+            >
+              <Share2 className="w-3.5 h-3.5 text-[#3182F6]" />
+              <span className="hidden sm:inline">루틴 내보내기</span>
+              <span className="sm:hidden">공유</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
+                isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-[#252528] hover:bg-[#333D4B] text-slate-300'
+              }`}
+              aria-label="닫기"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {/* Copy Feedback Toast Banner */}
+        {copyFeedback && (
+          <div className="mx-5 mt-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/40 text-[#3182F6] text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+            <CheckCheck className="w-4 h-4 flex-shrink-0" />
+            <span>{copyFeedback}</span>
+          </div>
+        )}
 
         {/* Mode Switcher Tabs */}
         <div className={`grid grid-cols-2 p-1.5 mx-5 mt-4 rounded-2xl ${
@@ -544,6 +600,18 @@ export const RoutineBuilderModal: React.FC<RoutineBuilderModalProps> = ({
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>기본값 리셋</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyJSON}
+            className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 min-h-[44px] border ${
+              isLight ? 'text-slate-500 border-slate-200 hover:bg-slate-100' : 'text-slate-400 border-[#333D4B] hover:bg-[#2C2C2E]'
+            }`}
+            title="JSON 데이터로 내보내기"
+          >
+            <Copy className="w-3 h-3" />
+            <span className="hidden sm:inline">JSON</span>
           </button>
 
           <div className="flex items-center gap-2">

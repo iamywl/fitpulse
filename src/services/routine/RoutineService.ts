@@ -169,4 +169,62 @@ export class RoutineService {
     const todayKey = this.getTodayDayOfWeek();
     return plan.days[todayKey];
   }
+
+  // ─── 루틴 내보내기 (Export & Share) ──────────────────────────────────────
+
+  /**
+   * 카카오톡, 노션, 메모장 공유용 깔끔한 텍스트 포맷으로 내보내기
+   */
+  static exportRoutineToText(splitList: IWeeklySplitDay[]): string {
+    const ordered = [
+      ...splitList.filter(d => d.dayIndex !== 0),
+      ...splitList.filter(d => d.dayIndex === 0),
+    ];
+
+    const lines: string[] = [
+      '🏋️ FitPulse 나만의 주간 분할 루틴',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ];
+
+    ordered.forEach(day => {
+      lines.push(`\n[${day.dayName}요일] ${day.title}`);
+      if (day.isRestDay || !day.exercises || day.exercises.length === 0) {
+        lines.push('  · 충분한 휴식 및 근육 회복 (Rest Day) 🧘');
+      } else {
+        day.exercises.forEach((ex, idx) => {
+          const restMin = Math.floor(ex.restSeconds / 60);
+          const restSec = ex.restSeconds % 60;
+          const restStr = restSec > 0 ? `${restMin}분 ${restSec}초` : `${restMin}분`;
+          lines.push(`  ${idx + 1}. ${ex.name} — ${ex.sets}세트 × ${ex.reps} (휴식: ${restStr})`);
+        });
+      }
+    });
+
+    lines.push('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    lines.push('✨ FitPulse와 함께 점진적 과부하를 실천해보세요!');
+
+    return lines.join('\n');
+  }
+
+  /**
+   * 백업 및 이관용 JSON 포맷으로 내보내기
+   */
+  static exportRoutineToJSON(splitList: IWeeklySplitDay[]): string {
+    return JSON.stringify(splitList, null, 2);
+  }
+
+  /**
+   * JSON 문자열로부터 루틴 분할 데이터 복원 및 유효성 검사
+   */
+  static importRoutineFromJSON(jsonStr: string): IWeeklySplitDay[] | null {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (Array.isArray(parsed) && parsed.length >= 7 && parsed[0].dayName) {
+        return parsed as IWeeklySplitDay[];
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
 }

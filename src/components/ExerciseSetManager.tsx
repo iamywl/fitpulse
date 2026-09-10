@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { IExerciseLog, IExerciseSet, WorkoutSession } from '../models/fitness';
 import { VolumeService } from '../services/calculator/VolumeService';
 import { ProgressionRecommendationService } from '../services/calculator/ProgressionRecommendationService';
-import { Plus, Trash2, Dumbbell, Sparkles, Check, Zap, ArrowUpRight } from 'lucide-react';
+import { Plus, Trash2, Dumbbell, Sparkles, Check, Zap, ArrowUpRight, Disc } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ThemeMode } from '../theme/pantone';
 import { AudioAlertService } from '../services/sound/AudioAlertService';
 import { RestTimerModal } from './RestTimerModal';
+import { BarbellPlateModal } from './BarbellPlateModal';
 import { TdsBadge, TdsButton } from './tds';
 
 const RPE_OPTIONS = [6, 7, 8, 9, 10];
@@ -62,6 +63,11 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
   const [isRestTimerOpen, setIsRestTimerOpen] = useState<boolean>(initialTimerOpen);
   const [completedSetForTimer, setCompletedSetForTimer] = useState<number>(1);
   const [restSecondsDuration, setRestSecondsDuration] = useState<number>(90);
+
+  // Barbell Plate Calculator Modal state
+  const [isPlateModalOpen, setIsPlateModalOpen] = useState<boolean>(false);
+  const [plateModalWeight, setPlateModalWeight] = useState<number>(80);
+  const [targetSetIdForPlate, setTargetSetIdForPlate] = useState<string | null>(null);
 
   const currentExercise = EXERCISE_OPTIONS.find(e => e.id === selectedExId) || EXERCISE_OPTIONS[0];
 
@@ -375,6 +381,24 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
               <span>미완료 세트에 반영</span>
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setPlateModalWeight(nextRecommendation.targetWeight);
+              setTargetSetIdForPlate(null);
+              setIsPlateModalOpen(true);
+            }}
+            className={`min-h-[40px] px-3 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all border ${
+              isLight
+                ? 'bg-white border-slate-200 text-[#3182F6] hover:bg-blue-50/50'
+                : 'bg-[#252528] border-slate-700 text-[#5B9DF8] hover:bg-[#333D4B]'
+            }`}
+            title="추천 무게 원판 조합 확인"
+          >
+            <Disc className="w-4 h-4" />
+            <span>원판 조합</span>
+          </button>
         </div>
       </div>
 
@@ -475,8 +499,21 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
             <div className="grid grid-cols-12 gap-2.5 items-center">
               {/* Weight Input (5 cols) */}
               <div className="col-span-5">
-                <div className="text-[11px] font-semibold text-slate-400 mb-1">
-                  무게 (kg)
+                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 mb-1">
+                  <span>무게 (kg)</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlateModalWeight(set.weight);
+                      setTargetSetIdForPlate(set.id);
+                      setIsPlateModalOpen(true);
+                    }}
+                    className="flex items-center gap-0.5 text-[#3182F6] hover:underline"
+                    title="원판 조합 계산기 열기"
+                  >
+                    <Disc className="w-3 h-3" />
+                    <span className="text-[10px]">원판</span>
+                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -638,6 +675,39 @@ export const ExerciseSetManager: React.FC<ExerciseSetManagerProps> = ({
         exerciseName={currentExercise.name}
         themeMode={themeMode}
         recommendation={nextRecommendation}
+      />
+
+      <BarbellPlateModal
+        isOpen={isPlateModalOpen}
+        onClose={() => {
+          setIsPlateModalOpen(false);
+          setTargetSetIdForPlate(null);
+        }}
+        initialWeight={plateModalWeight}
+        onApplyWeight={(newWeight) => {
+          if (targetSetIdForPlate) {
+            setSets(prev => prev.map(s => s.id === targetSetIdForPlate ? { ...s, weight: newWeight } : s));
+          } else {
+            // 미완료 세트가 있으면 거기에 적용, 없으면 새 세트로 추가
+            const uncompleted = sets.find(s => !s.completed);
+            if (uncompleted) {
+              setSets(prev => prev.map(s => s.id === uncompleted.id ? { ...s, weight: newWeight } : s));
+            } else {
+              const last = sets[sets.length - 1];
+              setSets(prev => [
+                ...prev,
+                {
+                  id: `set-${Date.now()}`,
+                  setNumber: sets.length + 1,
+                  weight: newWeight,
+                  reps: last ? last.reps : 8,
+                  completed: false,
+                }
+              ]);
+            }
+          }
+        }}
+        themeMode={themeMode}
       />
     </div>
   );
